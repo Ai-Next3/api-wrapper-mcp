@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -34,6 +35,11 @@ func (h *APIToolHandler) executeAPICall(ctx context.Context, toolCfg *config.Too
 
 	// Получаем API-токен из переменных окружения
 	apiToken := os.Getenv(h.cfg.Auth.TokenEnvVar)
+	if apiToken == "" {
+		log.Println("WARNING: API token is not set. Environment variable", h.cfg.Auth.TokenEnvVar, "is empty.")
+	} else {
+		log.Printf("INFO: Found API token starting with: %s...", apiToken[:4])
+	}
 
 	switch toolCfg.Method {
 	case "GET":
@@ -78,6 +84,8 @@ func (h *APIToolHandler) executeAPICall(ctx context.Context, toolCfg *config.Too
 		req.Header.Set("Authorization", apiToken)
 	}
 
+	log.Printf("INFO: Calling endpoint: %s %s", req.Method, req.URL)
+
 	// Выполняем запрос
 	resp, err := client.Do(req)
 	if err != nil {
@@ -92,7 +100,8 @@ func (h *APIToolHandler) executeAPICall(ctx context.Context, toolCfg *config.Too
 	}
 
 	if resp.StatusCode >= 400 {
-		return "", fmt.Errorf("API returned error status %d: %s", resp.StatusCode, string(body))
+		log.Printf("ERROR: API returned status %d. Response: %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("API error with status code %d", resp.StatusCode)
 	}
 
 	return string(body), nil

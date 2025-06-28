@@ -15,16 +15,16 @@ import (
 	"github.com/gomcpgo/api_wrapper/config"
 )
 
-// executeAPICall executes an API call based on the tool configuration and arguments
+// executeAPICall выполняет API-вызов на основе конфигурации инструмента и аргументов
 func (h *APIToolHandler) executeAPICall(ctx context.Context, toolCfg *config.ToolConfig, args map[string]interface{}) (string, error) {
-	// Apply default values for missing arguments
+	// Применяем значения по умолчанию для отсутствующих аргументов
 	for name, param := range toolCfg.Parameters {
 		if _, exists := args[name]; !exists && param.Default != nil {
 			args[name] = param.Default
 		}
 	}
 
-	// Create a new HTTP client with timeout
+	// Создаем новый HTTP-клиент с таймаутом
 	client := &http.Client{
 		Timeout: time.Duration(toolCfg.Timeout) * time.Second,
 	}
@@ -32,12 +32,11 @@ func (h *APIToolHandler) executeAPICall(ctx context.Context, toolCfg *config.Too
 	var req *http.Request
 	var err error
 
-	// Get API token from environment
+	// Получаем API-токен из переменных окружения
 	apiToken := os.Getenv(h.cfg.Auth.TokenEnvVar)
 
 	switch toolCfg.Method {
 	case "GET":
-		// Build query parameters for GET request
 		reqURL, err := url.Parse(toolCfg.Endpoint)
 		if err != nil {
 			return "", fmt.Errorf("invalid endpoint URL: %w", err)
@@ -45,7 +44,6 @@ func (h *APIToolHandler) executeAPICall(ctx context.Context, toolCfg *config.Too
 
 		query := reqURL.Query()
 		for key, tmplVal := range toolCfg.QueryParams {
-			// Process template values in query params
 			val, err := h.processTemplate(tmplVal, args)
 			if err != nil {
 				return "", fmt.Errorf("failed to process query parameter '%s': %w", key, err)
@@ -60,7 +58,6 @@ func (h *APIToolHandler) executeAPICall(ctx context.Context, toolCfg *config.Too
 		}
 
 	case "POST":
-		// Process the JSON template for POST request
 		jsonBody, err := h.processTemplate(toolCfg.Template, args)
 		if err != nil {
 			return "", fmt.Errorf("failed to process request template: %w", err)
@@ -76,50 +73,46 @@ func (h *APIToolHandler) executeAPICall(ctx context.Context, toolCfg *config.Too
 		return "", fmt.Errorf("unsupported HTTP method: %s", toolCfg.Method)
 	}
 
-	// Set authorization header if API token is provided
+	// Устанавливаем заголовок авторизации, если токен предоставлен
 	if apiToken != "" {
-		// req.Header.Set("Authorization", "Bearer "+apiToken)
 		req.Header.Set("Authorization", apiToken)
 	}
 
-	// Execute the request
+	// Выполняем запрос
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Read response body
+	// Читаем тело ответа
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	// Check for error status code
 	if resp.StatusCode >= 400 {
 		return "", fmt.Errorf("API returned error status %d: %s", resp.StatusCode, string(body))
 	}
 
-	// For successful responses, return the body as-is
 	return string(body), nil
 }
 
-// processTemplate processes a template string with the given arguments
+// processTemplate обрабатывает строку шаблона с заданными аргументами
 func (h *APIToolHandler) processTemplate(tmplStr string, args map[string]interface{}) (string, error) {
-	// Simple template processor for {{variable}} replacement
+	// Простой обработчик для замены {{variable}}
 	tmpl, err := template.New("").Delims("{{", "}}").Parse(tmplStr)
 	if err != nil {
 		return "", fmt.Errorf("invalid template: %w", err)
 	}
 
-	// Special handling for {{env:VARIABLE}} syntax
-	// Create a copy of args to avoid modifying the original
+	// Специальная обработка для синтаксиса {{env:VARIABLE}}
 	processedArgs := make(map[string]interface{})
 	for k, v := range args {
 		processedArgs[k] = v
 	}
 
-	// Process env vars in the template
+	// Заменяем переменные окружения в шаблоне
 	for k, v := range processedArgs {
 		if strVal, ok := v.(string); ok {
 			if strings.HasPrefix(strVal, "{{env:") && strings.HasSuffix(strVal, "}}") {

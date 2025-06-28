@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"log"
 	"os"
 
@@ -10,10 +12,14 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("Usage: api_wrapper <config.yaml>")
+	stdioMode := flag.Bool("stdio", false, "Run in stdio mode for local development")
+	flag.Parse()
+
+	// Конфигурационный файл должен быть первым аргументом после флагов
+	if len(flag.Args()) < 1 {
+		log.Fatal("Usage: api_wrapper [--stdio] <config.yaml>")
 	}
-	configFile := os.Args[1]
+	configFile := flag.Arg(0)
 	cfg, err := config.LoadConfig(configFile)
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
@@ -31,7 +37,7 @@ func main() {
 	apiToolHandler := tool.NewAPIToolHandler(cfg)
 
 	// 3. Добавляем инструменты на сервер
-	tools, err := apiToolHandler.ListTools(nil)
+	tools, err := apiToolHandler.ListTools(context.Background())
 	if err != nil {
 		log.Fatalf("Failed to list tools from handler: %v", err)
 	}
@@ -40,16 +46,24 @@ func main() {
 		s.AddTool(t, apiToolHandler.CallTool)
 	}
 
-	// 4. Запускаем HTTP сервер
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8081"
-	}
-	addr := ":" + port
+	if *stdioMode {
+		// Запуск в режиме Stdio
+		log.Println("Starting MCP server in stdio mode...")
+		if err := server.ServeStdio(s); err != nil {
+			log.Fatalf("Server error: %v", err)
+		}
+	} else {
+		// Запуск в режиме HTTP сервера
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8081"
+		}
+		addr := ":" + port
 
-	log.Printf("Starting StreamableHTTP MCP server on http://localhost%s", addr)
-	httpServer := server.NewStreamableHTTPServer(s)
-	if err := httpServer.Start(addr); err != nil {
-		log.Fatalf("Server error: %v", err)
+		log.Printf("Starting StreamableHTTP MCP server on http://localhost%s", addr)
+		httpServer := server.NewStreamableHTTPServer(s)
+		if err := httpServer.Start(addr); err != nil {
+			log.Fatalf("Server error: %v", err)
+		}
 	}
 }

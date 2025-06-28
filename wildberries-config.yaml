@@ -1,0 +1,46 @@
+# Server info
+server:
+  name: "Wildberries API"
+  description: "Обертка для API Wildberries"
+  version: "1.0.0"
+  
+# Authentication
+auth:
+  # Название переменной окружения, где хранится API ключ от Wildberries
+  token_env_var: "WB_API_TOKEN" 
+
+# Tool definitions
+tools:
+  # 1. Инструмент для получения баланса
+  - name: "wb_get_balance"
+    description: "Получить баланс продавца Wildberries. Возвращает текущий баланс и сумму, доступную к выводу."
+    endpoint: "https://finance-api.wildberries.ru/api/v1/account/balance"
+    method: "GET"
+    timeout: 30
+    parameters: {} # Этот метод не требует параметров
+
+  # 2. Инструмент для получения списка документов
+  - name: "wb_get_documents_list"
+    description: "Получить список документов продавца за определенный период."
+    endpoint: "https://documents-api.wildberries.ru/api/v1/documents/list"
+    method: "GET"
+    timeout: 30
+    # Описываем параметры, которые можно передать в запрос
+    query_params:
+      beginTime: "{{beginTime}}"
+      endTime: "{{endTime}}"
+      category: "{{category}}"
+    # Описываем эти параметры для модели, чтобы она знала, что спрашивать
+    parameters:
+      beginTime:
+        type: "string"
+        description: "Начало периода в формате 'ГГГГ-ММ-ДД', например '2024-07-01'"
+        required: false
+      endTime:
+        type: "string"
+        description: "Конец периода в формате 'ГГГГ-ММ-ДД', например '2024-07-15'"
+        required: false
+      category:
+        type: "string"
+        description: "ID категории документов, например 'redeem-notification'"
+        required: false 

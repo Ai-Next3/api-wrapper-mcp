@@ -1,0 +1,3772 @@
+openapi: 3.0.1
+info:
+  title: Маркетинг и продвижение
+  version: promotion
+  description: |
+    <div class="description_important">  
+        Узнать больше о маркетинге и продвижении можно в <a href="https://seller.wildberries.ru/instructions/category/59d92bd3-6ea0-40f2-b762-ca8835d7d42e?goBackOption=prevRoute&categoryId=479385c6-de01-4b4d-ad4e-ed941e65582e">справочном центре</a>
+    </div>  
+
+    Методы маркетинга и продвижения позволяют:
+      1. Получать информацию о [рекламных кампаниях](/openapi/promotion#tag/Kampanii) и [медиакампаниях](/openapi/promotion#tag/Media).
+      2. [Создавать](/openapi/promotion#tag/Sozdanie-kampanij) и [управлять](/openapi/promotion#tag/Upravlenie-kampaniyami) кампаниями.
+      3. Настраивать [параметры кампаний](/openapi/promotion#tag/Parametry-kampanij) — кластеры фраз, продвигаемые товары и так далее.
+      4. Управлять [финансами кампаний](/openapi/promotion#tag/Finansy).
+      5. Работать с [календарем акций](/openapi/promotion#tag/Kalendar-akcij).
+
+    Данные синхронизируются с базой раз в 3 минуты. Статусы кампаний меняются раз в минуту. Ставки кампаний меняются раз в 30 секунд.
+  x-file-name: promotion
+security:
+  - HeaderApiKey: []
+tags:
+  - name: Кампании
+    description: ''
+  - name: Создание кампаний
+    description: ''
+  - name: Управление кампаниями
+    description: ''
+  - name: Финансы
+    description: ''
+  - name: Параметры кампаний
+    description: ''
+  - name: Медиа
+    description: ''
+  - name: Календарь акций
+    description: ''
+paths:
+  /adv/v1/promotion/count:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Списки кампаний
+      description: |
+        Метод предоставляет списки всех [рекламных кампаний](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post) продавца с их ID. Кампании сгруппированы по типу и статусу, у каждой указана дата последнего изменения.
+
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Кампании
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adverts:
+                    type: array
+                    nullable: true
+                    description: Данные по кампаниям
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          description: Тип кампании
+                          type: integer
+                        status:
+                          description: Статус кампании
+                          type: integer
+                        count:
+                          description: Количество кампаний
+                          type: integer
+                        advert_list:
+                          description: Список кампаний
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              advertId:
+                                description: ID кампании
+                                type: integer
+                              changeTime:
+                                description: Дата и время последнего изменения кампании
+                                type: string
+                                format: date-time
+                  all:
+                    description: Общее количество кампаний всех статусов и типов
+                    type: integer
+              example:
+                adverts:
+                  - type: 4
+                    status: 8
+                    count: 3
+                    advert_list:
+                      - advertId: 6485174
+                        changeTime: '2023-05-10T12:12:52.676254+03:00'
+                      - advertId: 6500443
+                        changeTime: '2023-05-10T17:08:46.370656+03:00'
+                      - advertId: 7936341
+                        changeTime: '2023-07-12T15:51:08.367478+03:00'
+                all: 3
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v0/config:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Конфигурационные значения Продвижения
+      description: |
+        Метод предоставляет допустимые значения основных параметров конфигурации [кампаний](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post): например, минимальные ставки, доступные категории и максимальное количество товаров, которые можно добавить в кампанию.
+
+        <div class="description_limit">  
+          Максимум 1 запрос в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">минуту</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Создание кампаний
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    description: Список категорий товаров (предметов) с минимально допустимыми ставками
+                    items:
+                      $ref: '#/components/schemas/V0GetConfigCategoriesResponse'
+                  config:
+                    type: array
+                    description: Список основных параметров конфигурации с допустимыми значениями
+                    items:
+                      type: object
+                      properties:
+                        description:
+                          type: string
+                          description: Описание параметра
+                        name:
+                          type: string
+                          description: Название параметра
+                        value:
+                          type: string
+                          description: Значение
+              example:
+                categories:
+                  - id: 760
+                    name: Автомобильные товары
+                    cpm_min: 112
+                config:
+                  - description: Минимальный бюджет кампании
+                    name: budget_min
+                    value: '1000'
+                  - description: Максимальный период в днях, за который можно получить статистику
+                    name: api_fullstat_day_depth
+                    value: '31'
+                  - description: Минимальная ставка CPM для автоматической кампании
+                    name: cpm_min_booster
+                    value: '100'
+                  - description: Минимальная ставка CPM для аукциона
+                    name: cpm_min_search_catalog
+                    value: '150'
+                  - description: Максимальное количество товаров для аукциона
+                    name: max_nm_count
+                    value: '50'
+                  - description: Максимальное количество товаров для автоматической кампании
+                    name: max_auto_nms
+                    value: '100'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/promotion/adverts:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Информация о кампаниях
+      description: |
+        Метод предоставляет информацию о созданных рекламных кампаниях по их статусам, типам и ID.
+
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Кампании
+      parameters:
+        - name: status
+          in: query
+          description: |
+            <dl>
+            <dt>Статус кампании:</dt>
+            <dd><code>-1</code> - кампания в процессе удаления </dd>
+            <dd><code>4</code> - готова к запуску </dd>
+            <dd><code>7</code> - завершено</dd>
+            <dd><code>8</code> - отказался</dd>
+            <dd><code>9</code> - активно</dd>
+            <dd><code>11</code> - кампания на паузе</dd>
+            </dl>
+            Кампания в процессе удаления. Статус означает, что кампания была удалена, и через 3-10 минут она исчезнет из ответа метода.
+          schema:
+            type: integer
+            enum:
+              - -1
+              - 4
+              - 7
+              - 8
+              - 9
+              - 11
+        - name: type
+          in: query
+          description: |
+            <dl>
+            <dt>Тип кампании:</dt>
+            <dd><code>4</code> - кампания в каталоге (<strong>устаревший тип</strong>)</dd>
+            <dd><code>5</code> - кампания в карточке товара (<strong>устаревший тип</strong>)</dd>
+            <dd><code>6</code> - кампания в поиске (<strong>устаревший тип</strong>)</dd>
+            <dd><code>7</code> - кампания в рекомендациях на главной странице (<strong>устаревший тип</strong>)</dd>
+            <dd><code>8</code> - автоматическая кампания </dd>
+            <dd><code>9</code> - Аукцион </dd>
+            </dl>
+          schema:
+            type: integer
+            enum:
+              - 4
+              - 5
+              - 6
+              - 7
+              - 8
+              - 9
+        - name: order
+          in: query
+          description: |
+            <dl>
+            <dt>Порядок:</dt>
+            <dd><code>create</code> (по времени создания кампании)</dd>
+            <dd><code>change</code> (по времени последнего изменения кампании)</dd>
+            <dd><code>id</code> (по ID кампании)</dd>
+            </dl>
+          schema:
+            type: string
+            enum:
+              - create
+              - change
+              - id
+        - name: direction
+          in: query
+          description: |
+            <dl>
+            <dt>Направление:</dt>
+            <dd><code>desc</code> (от большего к меньшему)</dd>
+            <dd><code>asc</code> (от меньшего к большему)</dd>
+            </dl>
+            <br>Например: <code>/adv/v1/promotion/adverts?type=6&order=change&<b>direction=asc</b></code>
+          schema:
+            type: string
+            enum:
+              - desc
+              - asc
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                description: 'Список ID кампаний. Максимум 50. <br> <br> Получить id кампаний можно методом <b>Списки кампаний</b>. '
+            example:
+              - 1234567
+              - 63453471
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/ResponseInfoAdvert'
+                    - $ref: '#/components/schemas/ResponseInfoAdvertType8'
+                    - $ref: '#/components/schemas/ResponseInfoAdvertType9'
+              examples:
+                ResponseInfoAdvert:
+                  $ref: '#/components/examples/ResponseInfoAdvert'
+                ResponseInfoAdvertType8:
+                  $ref: '#/components/examples/ResponseInfoAdvertType8'
+                ResponseInfoAdvertType9:
+                  $ref: '#/components/examples/ResponseInfoAdvertType9'
+                ResponseInfoAdvertsAll:
+                  $ref: '#/components/examples/ResponseInfoAdvertsAll'
+        '204':
+          description: Кампании не найдены
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                IncorrectTypeAdv:
+                  $ref: '#/components/examples/IncorrectTypeAdv'
+                IncorrectSupplierIdAdv:
+                  $ref: '#/components/examples/IncorrectSupplierIdAdv'
+                IncorrectUsingMethods:
+                  $ref: '#/components/examples/IncorrectUsingMethods'
+        '401':
+          $ref: '#/components/responses/401'
+        '422':
+          description: Ошибка обработки параметров запроса
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                ErrorProcessRequestParam:
+                  $ref: '#/components/examples/ErrorProcessRequestParam'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/save-ad:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Создать автоматическую кампанию
+      description: |
+        Метод создаёт автоматическую [кампанию](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post) для продвижения товаров в:
+          - каталоге
+          - поиске
+          - карточках товаров
+          - рекомендациях на главной странице WB
+
+        <div class="description_limit">  
+          Максимум 1 запрос в 20 <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунд</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Создание кампаний
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  description: |
+                    <dl>
+                    <dt>Тип автоматической кампании:</dt>
+                    <dd><code>8</code>
+                    </dl>
+                  type: integer
+                  example: 8
+                name:
+                  description: Название кампании (max. 128 символов)
+                  type: string
+                  example: Парашюты
+                subjectId:
+                  description: |
+                    ID предмета, для которого создается кампания.<br>
+                    Существующие у продавца ID можно получить методом из раздела "Контент / Просмотр" - "Список НМ", поле ответа - `subjectID`.
+                  type: integer
+                  example: 270
+                sum:
+                  description: Сумма пополнения
+                  type: integer
+                  example: 500
+                btype:
+                  description: |
+                    <dl>
+                    <dt>Tип списания.</dt>
+                    <dd><code>0</code> - Счёт</dd>
+                    <dd><code>1</code> - Баланс</dd>
+                    <dd><code>3</code> - Бонусы</dd>
+                    </dl>
+                  type: integer
+                  example: 1
+                on_pause:
+                  description: |
+                    <dl>
+                    <dt>После создания кампания:</dt> 
+                    <dd>
+                      <dl>
+                        <dt><code>true</code> - будет на паузе.</dt>
+                        <dd>Запуск кампании будет доступен через 3 минуты после создания кампании.</dd>
+                      </dl>
+                    </dd> 
+                    <dd><code>false</code> - будет сразу запущена</dd> 
+                    </dl>
+                  type: boolean
+                  example: true
+                nms:
+                  description: |
+                    Массив артикулов WB. <br>
+                    Максимум 100 артикулов. 
+                  type: array
+                  items:
+                    type: integer
+                cpm:
+                  description: |
+                    Ставка. <br>
+                    Если будет указана ставка меньше допустимого размера, то автоматически установится ставка минимально допустимого размера.
+                  type: integer
+            example:
+              type: 8
+              name: Парашюты
+              subjectId: 270
+              sum: 500
+              btype: 1
+              on_pause: true
+              nms:
+                - 9178363
+                - 9178364
+              cpm: 10
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                description: ID созданной кампании
+                type: string
+              example: '9008917'
+        '400':
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                IncorrectId:
+                  summary: ''
+                  description: ''
+                  value:
+                    error: Некорректный ID предмета
+                BaseBudget500:
+                  value:
+                    error: базовый бюджет должен быть больше 500р
+                InvalidWriteOffType:
+                  value:
+                    error: Некорректный тип списания
+                DepositAmount50:
+                  value:
+                    error: Сумма пополнения должна быть кратна 50р
+                InsufficientFundsInAccount:
+                  value:
+                    error: недостаточно средств на счете
+                IncorrectCompanyName:
+                  value:
+                    error: Некорректное название кампании
+                NoProductsSelectedCategory:
+                  value:
+                    error: Товары выбранной категории не в наличии
+                PlacementIsNotPossible:
+                  value:
+                    error: размещение невозможно
+        '401':
+          $ref: '#/components/responses/401'
+        '422':
+          description: Ошибка обработки параметров запроса
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                ReceivingRecommendationsOnMainPage:
+                  value:
+                    error: Ошибка получения размещения в рекомендациях на главной
+                NotGetSupplierBalance:
+                  value:
+                    error: Не удалось получить баланс поставщика
+                CreatingSinglePlacement:
+                  value:
+                    error: Ошибка создания единственного размещения
+                ReceivingInProductCard:
+                  value:
+                    error: Ошибка получения размещения в карточке товара
+                GettingCpmCalculation:
+                  value:
+                    error: Ошибка получения расчета ставок
+                SavingPlacementInCard:
+                  value:
+                    error: Ошибка сохранения размещения в карточке
+                SavingPlacementInRecommend:
+                  value:
+                    error: Ошибка сохранения размещения в рекомендациях
+                FailedPutCampaignInCache:
+                  value:
+                    error: не удалось положить кампанию в кеш
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v2/seacat/save-ad:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Создать кампанию Аукцион
+      description: |
+        Метод создаёт [кампанию](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post) Аукцион для продвижения товаров в результатах поиска WB.
+
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">минуту</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Создание кампаний
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                campaignName:
+                  description: Название кампании
+                  type: string
+                nms:
+                  type: array
+                  description: |
+                    Карточки товаров для кампании. Доступные карточки товаров можно получить с помощью метода [Карточки товаров для кампаний](./promotion#tag/Slovari/paths/~1adv~1v2~1supplier~1nms/post). Максимум 50 товаров (`nm`)
+                  items:
+                    type: integer
+                    description: Артикул WB (`nmId`)
+            example:
+              campaignName: Телефоны
+              nms:
+                - 146168367
+                - 200425104
+      responses:
+        '200':
+          description: Успешно
+          content:
+            text/plain:
+              schema:
+                type: integer
+                description: ID кампании
+                example: 1234567
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Нет доступных категорий для рк. Создайте новую кампанию для попадания в текущие категории
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/supplier/subjects:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Предметы для кампаний
+      description: |
+        Метод предоставляет список [предметов](/openapi/work-with-products#tag/Kategorii-predmety-i-harakteristiki/paths/~1content~1v2~1object~1all/get), которые можно добавить в рекламную [кампанию](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post).
+
+        <div class="description_limit">  
+          Максимум 1 запрос в 12 <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунд</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Создание кампаний
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                nullable: true
+                x-nullable: true
+                items:
+                  type: object
+                  properties:
+                    id:
+                      description: ID предмета
+                      type: integer
+                    name:
+                      description: Предмет
+                      type: string
+                    count:
+                      description: Количество Артикулов WB (`nmId`) с таким предметом.
+                      type: integer
+              examples:
+                Array:
+                  value:
+                    - name: 3D очки
+                      id: 2560
+                      count: 1899
+                'null':
+                  value: null
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          description: Не найдено
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v2/supplier/nms:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Карточки товаров для кампаний
+      description: |
+        Метод предоставляет список [карточек товаров](/openapi/work-with-products#tag/Kartochki-tovarov/paths/~1content~1v2~1get~1cards~1list/post), которые можно добавить в рекламную [кампанию](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post). Для получения карточек необходимы ID [предметов](/openapi/promotion#tag/Sozdanie-kampanij/paths/~1adv~1v1~1supplier~1subjects/get), также доступных для добавления в кампанию.
+
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">минуту</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Создание кампаний
+      requestBody:
+        description: ID предметов, для которых нужно получить карточки товаров
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+            example:
+              - 123
+              - 456
+              - 765
+              - 321
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                description: Карточки товаров для кампаний
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      description: Название товара
+                      example: Плед
+                    nm:
+                      type: integer
+                      description: Артикул WB (`nmId`)
+                      example: 146168367
+                    subjectId:
+                      type: integer
+                      description: ID предмета
+                      example: 765
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Ошибка обработки тела запроса
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v0/cpm:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Изменение ставки
+      deprecated: true
+      description: |
+        Меняет ставку у кампании.  
+
+        Ставку можно изменить в любой момент до окончания кампании. Измененная [информация о ставках кампании](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post) появляется в течение трёх минут.
+
+        <div class="description_important">
+          Если размер ставки будет меньше допустимого, в ответе вы получите статус-код <code>422</code> — размер ставки не изменён.
+        </div>        
+
+        При изменении ставки для кампании с типом `9` — Аукцион: 
+          1. Значение `type` всегда будет `9`
+          1. Значение `instrument` всегда будет `6` (<strong>устаревший тип кампании</strong>).
+          1. Значение `param` всегда берётся из поля `id` структуры `subject` в [информации о кампании](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post).
+
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Управление кампаниями
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - advertId
+                - type
+                - cpm
+                - param
+              properties:
+                advertId:
+                  description: ID кампании, где меняется ставка
+                  type: integer
+                  example: 789
+                type:
+                  description: |
+                    <dl>
+                    <dt>кампании, где меняется ставка:</dt>
+                    <dd><code>4</code> - кампания в каталоге (<strong>устаревший тип</strong>)</dd> 
+                    <dd><code>5</code> - кампания в карточке товара (<strong>устаревший тип</strong>)</dd>
+                    <dd><code>6</code> - кампания в поиске (<strong>устаревший тип</strong>)</dd>
+                    <dd><code>7</code> - кампания в рекомендациях на главной странице (<strong>устаревший тип</strong>)</dd>
+                    <dd><code>8</code> - автоматическая кампания</dd>
+                    <dd><code>9</code> - кампания Аукцион </dd>
+                    </dl>
+                  type: integer
+                  enum:
+                    - 5
+                    - 6
+                    - 7
+                    - 8
+                    - 9
+                cpm:
+                  description: Новое значение ставки
+                  type: integer
+                  example: 456
+                param:
+                  description: |
+                    Параметр, для которого будет внесено изменение. Является значением `subjectId` (для кампании в поиске и рекомендациях (<strong>устаревшие типы кампаний</strong>)), `setId` (для кампании в карточке товара (<strong>устаревший тип кампании</strong>)) или `menuId` (для кампании в каталоге (<strong>устаревший тип кампании</strong>)). 
+                    <br> Для автоматической кампании указывать этот параметр не требуется.
+                  type: integer
+                  example: 23
+                instrument:
+                  description: тип кампании для изменения ставки в 4 - каталог (<strong>устаревший тип</strong>), 6 - поиск (<strong>устаревший тип</strong>)
+                  type: integer
+                  example: 4
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                IncorrectParamAdv:
+                  $ref: '#/components/examples/IncorrectParamAdv'
+                IncorrectTypeAdv:
+                  $ref: '#/components/examples/IncorrectTypeAdv'
+                IncorrectCpmAdv:
+                  $ref: '#/components/examples/IncorrectCpmAdv'
+                IncorrectSupplierIdAdv:
+                  $ref: '#/components/examples/IncorrectSupplierIdAdv'
+        '401':
+          $ref: '#/components/responses/401'
+        '422':
+          description: Размер ставки не изменен
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                RequestBodyProcessErrorAdv:
+                  $ref: '#/components/examples/RequestBodyProcessErrorAdv'
+                AmountNotChanged:
+                  $ref: '#/components/examples/AmountNotChanged'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v0/bids:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    patch:
+      summary: Изменение ставок карточек товаров
+      description: |
+        Метод меняет ставки карточек товаров по артикулам WB в автоматических кампаниях и Аукционе.
+        <br><br> 
+        Для кампаний в любом статусе кроме `-1`, `7` и `8`
+        <br>
+
+        Минимально допустимые ставки для категорий товаров и типов кампаний см. в ответе метода [конфигурационных значений](/openapi/promotion#tag/Sozdanie-kampanij/paths/~1adv~1v0~1config/get)
+        <br>
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>          
+      tags:
+        - Управление кампаниями
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - bids
+              properties:
+                bids:
+                  type: array
+                  maxItems: 20
+                  items:
+                    $ref: '#/components/schemas/V0AdvertMultibid'
+      responses:
+        '204':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: 'Детали ошибки '
+                  origin:
+                    type: string
+                    description: 'ID внутреннего сервиса WB '
+                  request_id:
+                    type: string
+                    description: Уникальный ID запроса
+                  status:
+                    type: integer
+                    description: HTTP статус-код
+                  title:
+                    type: string
+                    description: Заголовок ошибки
+                  errors:
+                    type: array
+                    description: Детализация ошибки
+                    items:
+                      type: object
+                      properties:
+                        detail:
+                          type: string
+                          description: Детали ошибки
+                        field:
+                          type: string
+                          description: Поле с ошибкой
+                  type:
+                    type: string
+                    description: Тип ошибки
+              examples:
+                CampaignIsNotUnique:
+                  $ref: '#/components/examples/CampaignIsNotUnique'
+                CanNotDeserializeResponseBody:
+                  $ref: '#/components/examples/CanNotDeserializeResponseBody'
+                CampaignNotFound:
+                  $ref: '#/components/examples/CampaignNotFoundBids'
+                NmNotFound:
+                  $ref: '#/components/examples/NmNotFound'
+                WrongCampaignID:
+                  $ref: '#/components/examples/WrongCampaignID'
+                WrongCampaignStatus:
+                  $ref: '#/components/examples/WrongCampaignStatus'
+                WrongBidValue:
+                  $ref: '#/components/examples/WrongBidValue'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v0/delete:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Удаление кампании
+      description: |
+        Метод удаляет [кампании](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post) в статусе `4` — готова к запуску.<br><br>
+
+        После удаления кампания некоторое время будет находиться в статусе `-1` — кампания в процессе удаления. Полное удаление кампании занимает от 3 до 10 минут.
+
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Управление кампаниями
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseAdvError1'
+              examples:
+                ResponseInvalidCampaignID:
+                  $ref: '#/components/examples/ResponseInvalidCampaignID'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v0/rename:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Переименование кампании
+      description: |
+        Метод меняет название [кампании](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post). Это можно сделать в любой момент существования кампании.
+
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Управление кампаниями
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - advertId
+                - name
+              properties:
+                advertId:
+                  type: integer
+                  description: ID кампании, у которой меняется название
+                name:
+                  type: string
+                  description: Новое название (максимум 100 символов)
+            example:
+              advertId: 2233344
+              name: newnmame
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                InvalidRcIdAdv:
+                  $ref: '#/components/examples/InvalidRcIdAdv'
+                IncorrectName:
+                  $ref: '#/components/examples/IncorrectName'
+                IncorrectSupplierIdAdv:
+                  $ref: '#/components/examples/IncorrectSupplierIdAdv'
+        '401':
+          $ref: '#/components/responses/401'
+        '422':
+          description: Ошибка обработки параметров запроса
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                RequestBodyProcessErrorAdv:
+                  $ref: '#/components/examples/RequestBodyProcessErrorAdv'
+                CompanyNameChangeErr:
+                  $ref: '#/components/examples/CompanyNameChangeErr'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v0/start:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Запуск кампании
+      description: |
+        Метод запускает [кампании](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post) в статусах `4` — готово к запуску — или `11` — пауза.
+
+        Чтобы запустить кампанию со статусом `4`, необходимо выполнить два условия:
+          1. После создания кампании в кабинете **WB. Продвижение** нажать кнопку **Применить изменения**.
+          2. Установить бюджет — максимальную сумму затрат на кампанию.
+
+        Чтобы запустить кампанию со статусом `11`, проверьте ее бюджет. Если бюджета недостаточно, [пополните его](/openapi/promotion#tag/Finansy/paths/~1adv~1v1~1budget~1deposit/post).
+
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Управление кампаниями
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1234
+          required: true
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                InvalidRcIdAdv:
+                  $ref: '#/components/examples/InvalidRcIdAdv'
+                IncorrectSupplierIdAdv:
+                  $ref: '#/components/examples/IncorrectSupplierIdAdv'
+        '401':
+          $ref: '#/components/responses/401'
+        '422':
+          description: Статус не изменен
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                StatusNoChangeAdv:
+                  $ref: '#/components/examples/StatusNoChangeAdv'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v0/pause:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Пауза кампании
+      description: |
+        Метод ставит [кампании](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post) в статусе `9` — активно — на паузу.
+
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Управление кампаниями
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1234
+          required: true
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                InvalidRcIdAdv:
+                  $ref: '#/components/examples/InvalidRcIdAdv'
+                IncorrectSupplierIdAdv:
+                  $ref: '#/components/examples/IncorrectSupplierIdAdv'
+        '401':
+          $ref: '#/components/responses/401'
+        '422':
+          description: Статус не изменен
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                StatusNoChangeAdv:
+                  $ref: '#/components/examples/StatusNoChangeAdv'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v0/stop:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Завершение кампании
+      description: |
+        Метод завершает [кампании](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post) в статусах:
+          - `4` — готово к запуску
+          - `9` — приостановлена продавцом
+          - `11` — пауза
+          
+        <div class="description_limit">  
+          Максимум 5 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Управление кампаниями
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1234
+          required: true
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                InvalidRcIdAdv:
+                  $ref: '#/components/examples/InvalidRcIdAdv'
+                IncorrectSupplierIdAdv:
+                  $ref: '#/components/examples/IncorrectSupplierIdAdv'
+        '401':
+          $ref: '#/components/responses/401'
+        '422':
+          description: Статус не изменен
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                StatusNoChangeAdv:
+                  $ref: '#/components/examples/StatusNoChangeAdv'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/balance:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Баланс
+      description: |
+        Метод предоставляет информацию о:
+          - счёте кабинета Продвижения WB. Его пополняет продавец.
+          - балансе — максимальной сумме для оплаты камапнии по взаиморасчету: удержании средств из будущих продаж. Баланс пополнить нельзя, он рассчитывается автоматически на основе отчётов по продвижению.
+          - бонусных начислениях WB.
+
+        Информацию о бюджете кампаний можно получить в [отдельном методе](/openapi/promotion#tag/Finansy/paths/~1adv~1v1~1budget/get).
+
+        <div class="description_limit">  
+          Максимум 1 запрос в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Финансы
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    description: Счёт, рублей
+                    type: integer
+                  net:
+                    description: Баланс, рублей
+                    type: integer
+                  bonus:
+                    description: Бонусы, рублей
+                    type: integer
+              example:
+                balance: 11083
+                net: 0
+                bonus: 15187
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                IncorrectSupplierIdAdv:
+                  $ref: '#/components/examples/IncorrectSupplierIdAdv'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/budget:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Бюджет кампании
+      description: |
+        Метод предоставляет информацию о бюджете [кампании](/openapi/promotion#tag/Kampanii/paths/~1adv~1v1~1promotion~1adverts/post) — максимальной сумме затрат на кампанию. Бюджет кампании можно [пополнить](/openapi/promotion#tag/Finansy/paths/~1adv~1v1~1budget~1deposit/post).
+
+        <div class="description_limit">  
+          Максимум 4 запроса в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Финансы
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cash:
+                    description: Поле не используется. Значение всегда 0.
+                    type: integer
+                  netting:
+                    description: Поле не используется. Значение всегда 0.
+                    type: integer
+                  total:
+                    description: Бюджет кампании, ₽
+                    type: integer
+              example:
+                cash: 0
+                netting: 0
+                total: 500
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                CampaignNotBelongSeller:
+                  $ref: '#/components/examples/CampaignNotBelongSeller'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/budget/deposit:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Пополнение бюджета кампании
+      description: |
+        Метод пополняет [бюджет](/openapi/promotion#tag/Finansy/paths/~1adv~1v1~1budget/get) кампании. Можно использовать, чтобы [запустить](/openapi/promotion#tag/Upravlenie-kampaniyami/paths/~1adv~1v0~1start/get) кампанию в статусе `11` — пауза.
+
+        <div class="description_limit">  
+          Максимум 1 запрос в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Финансы
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1234567
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sum:
+                  description: Сумма пополнения
+                  type: integer
+                  example: 5000
+                type:
+                  description: |
+                    <dl>
+                    <dt>Тип источника пополнения:</dt>
+                    <dd><code>0</code> - Счёт</dd>
+                    <dd><code>1</code> - Баланс</dd>
+                    <dd><code>3</code> - Бонусы</dd>
+                    </dl>
+                  type: integer
+                  example: 1
+                return:
+                  type: boolean
+                  description: Флаг возврата ответа (`true` - в ответе вернется обновлённый размер бюджета кампании, `false` или не указать параметр вообще - не вернётся.)
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ResponseWithReturn'
+              examples:
+                ResponseWithReturn:
+                  $ref: '#/components/examples/ResponseWithReturn'
+        '400':
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                DepositAmountMultiple50:
+                  description: Сумма пополнения должна быть кратна 50 руб
+                  value:
+                    error: Сумма пополнения должна быть кратна 50 руб
+                MinimumDepositAmountIs500:
+                  description: Минимальная сумма пополнения 1000 рублей
+                  value:
+                    error: Минимальная сумма пополнения 1000 рублей
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/upd:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Получение истории затрат
+      description: |
+        Метод формирует список фактических затрат на рекламные кампании за заданный период.
+
+        <div class="description_limit">  
+          Максимум 1 запрос в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Финансы
+      parameters:
+        - name: from
+          in: query
+          description: Начало интервала
+          schema:
+            type: string
+            format: date
+            example: '2023-07-31'
+          required: true
+        - name: to
+          in: query
+          description: |
+            Конец интервала. <br> 
+            (Минимальный интервал 1 день, максимальный 31)
+          schema:
+            type: string
+            format: date
+            example: '2023-08-02'
+          required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    updNum:
+                      description: Номер выставленного документа
+                      type: integer
+                    updTime:
+                      nullable: true
+                      description: Время списания
+                      type: string
+                      format: time-date
+                    updSum:
+                      description: Выставленная сумма
+                      type: integer
+                    advertId:
+                      description: ID кампании
+                      type: integer
+                    campName:
+                      description: Название кампании
+                      type: string
+                    advertType:
+                      description: Тип кампании
+                      type: integer
+                    paymentType:
+                      description: |
+                        Источник списания:
+                         - `Баланс`
+                         - `Бонусы`
+                         - `Счет`
+                         - `Кэшбэк`
+                      type: string
+                    advertStatus:
+                      description: |
+                        <dl>
+                          <dt>Статус кампании:</dt>
+                          <dd><code>4</code> - готова к запуску </dd>
+                          <dd><code>7</code> - завершена</dd>
+                          <dd><code>8</code> - отказался</dd>
+                          <dd><code>9</code> - активна</dd>
+                          <dd><code>11</code> - приостановлена</dd>
+                        </dl>
+                      type: integer
+              example:
+                - updNum: 0
+                  updTime: '2023-07-31T12:12:54.060536+03:00'
+                  updSum: 24
+                  advertId: 3355881
+                  campName: лук лучок
+                  advertType: 6
+                  paymentType: Баланс
+                  advertStatus: 9
+                - updNum: 0
+                  updTime: null
+                  updSum: 107
+                  advertId: 3366882
+                  campName: золотая луковица
+                  advertType: 8
+                  paymentType: Счет
+                  advertStatus: 11
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                IncorrectSupplierIdAdv:
+                  $ref: '#/components/examples/IncorrectSupplierIdAdv'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/payments:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Получение истории пополнений счёта
+      description: |
+        Метод возвращает историю пополнений счёта **ВБ.Продвижение** за заданный период.
+
+        <div class="description_limit">  
+          Максимум 1 запрос в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Финансы
+      parameters:
+        - name: from
+          in: query
+          description: Начало интервала
+          schema:
+            type: string
+            format: date
+            example: '2023-07-31'
+        - name: to
+          in: query
+          description: |
+            Конец интервала. <br> 
+            (Минимальный интервал 1 день, максимальный 31)
+          schema:
+            type: string
+            format: date
+            example: '2023-08-02'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      description: ID платежа
+                      type: integer
+                    date:
+                      description: Дата платежа
+                      type: string
+                      format: time-date
+                    sum:
+                      description: Сумма платежа
+                      type: integer
+                    type:
+                      description: |
+                        <dl>
+                        <dt>Тип источника списания:</dt>
+                        <dd><code>0</code> - Счёт</dd>
+                        <dd><code>1</code> - Баланс</dd>
+                        <dd><code>3</code> - Картой</dd>
+                        </dl>
+                      type: integer
+                    statusId:
+                      description: |
+                        <dl>
+                        <dt>Статус:</dt>
+                        <dd><code>0</code> - ошибка</dd>
+                        <dd><code>1</code> - обработано</dd>
+                        </dl>
+                      type: integer
+                    cardStatus:
+                      description: |
+                        <dl>
+                        <dt>Статус операции(при оплате картой):</dt>
+                        <dd><b>success</b> - успех</dd>
+                        <dd><b>fail</b> - неуспех</dd>
+                        <dd><b>pending</b> - в ожидании ответа</dd>
+                        <dd><b>unknown</b> - неизвестно</dd>
+                        </dl>
+                      type: string
+              example:
+                - id: 1036666
+                  date: '2022-02-04T09:06:47.985843Z'
+                  sum: 600
+                  type: 0
+                  statusId: 1
+                  cardStatus: ''
+                - id: 55261296
+                  date: '2023-04-13T10:07:42'
+                  sum: 1500
+                  type: 3
+                  statusId: 1
+                  cardStatus: succeeded
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                IncorrectSupplierIdAdv:
+                  $ref: '#/components/examples/IncorrectSupplierIdAdv'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/search/set-plus:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Управление активностью фиксированных фраз
+      description: |
+        Метод делает активными или неактивными фиксированные фразы в [кампаниях](/openapi/promotion#tag/Sozdanie-kampanij/paths/~1adv~1v2~1seacat~1save-ad/post) Аукцион. Фиксированные фразы нужны, чтобы товар отображался в поиске только по определенным поисковым запросам.<br><br>
+
+        Установить или удалить фиксированные фразы можно через [отдельный метод](/openapi/promotion#tag/Parametry-kampanij/paths/~1adv~1v1~1search~1set-plus/post).
+
+        <div class="description_limit">  
+          Максимум 1 запрос в 500 <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">миллисекунд</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Параметры кампаний
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1234567
+          required: true
+        - name: fixed
+          in: query
+          description: Новое состояние (`false` - сделать неактивными, `true` - сделать активными)
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Неправильный запрос
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Установка/удаление фиксированных фраз
+      description: |
+        Метод устанавливает и удаляет фиксированные фразы в [кампаниях](/openapi/promotion#tag/Sozdanie-kampanij/paths/~1adv~1v2~1seacat~1save-ad/post) Аукцион. Фиксированные фразы можно выбрать в списке ключевых фраз кампании, который формируется после запуска.<br><br>
+
+        Отправка пустого массива в методе удаляет все фиксированные фразы и отключает [активность](/openapi/promotion#tag/Parametry-kampanij/paths/~1adv~1v1~1search~1set-plus/get) всех фиксированных фраз кампании.
+
+        <div class="description_limit">  
+          Максимум 1 запрос в 500 <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">миллисекунд</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Параметры кампаний
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1234567
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pluse:
+                  description: Список фиксированных фраз (max. 100)
+                  type: array
+                  items:
+                    type: string
+            example:
+              pluse:
+                - Фраза 1
+                - Фраза 2
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              example:
+                - Фраза 1
+                - Фраза 2
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: 'json: cannot unmarshal number into Go struct field request.pluse of type string'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/search/set-phrase:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Установка/удаление минус-фраз фразового соответствия
+      description: |
+        Метод устанавливает и удаляет минус-фразы фразового соответствия в [кампаниях](/openapi/promotion#tag/Sozdanie-kampanij/paths/~1adv~1v2~1seacat~1save-ad/post) Аукцион. Фразовое соответствие — это когда поисковый запрос содержит в себе минус-фразу.<br><br>
+
+        Данные минус-фразы нужно ввести вручную. Максимально допустимое количество минус-фраз в кампании — 1000.<br>
+
+        Отправка пустого массива удаляет все минус-фразы фразового соответствия из кампании.
+
+        <div class="description_limit">  
+          Максимум 2 запроса в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Параметры кампаний
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1234567
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phrase:
+                  description: Минус-фразы (макс. 1000 шт.)
+                  type: array
+                  items:
+                    type: string
+            example:
+              phrase:
+                - сло
+                - гу
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Неправильный запрос
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/search/set-strong:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Установка/удаление минус-фраз точного соответствия
+      description: |
+        Метод устанавливает и удаляет минус-фразы точного соответствия в [кампаниях](/openapi/promotion#tag/Sozdanie-kampanij/paths/~1adv~1v2~1seacat~1save-ad/post) Аукцион. Точное соответствие — это когда поисковый запрос полностью соответствует минус-фразе.<br><br>
+
+        Данные минус-фразы нужно ввести вручную. Максимально допустимое количество минус-фраз в кампании — 1000.<br>
+
+        Отправка пустого массива удаляет все минус-фразы точного соответствия из кампании.
+
+        <div class="description_limit">  
+          Максимум 2 запроса в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Параметры кампаний
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1234567
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                strong:
+                  description: Минус-фразы (макс. 1000 шт.)
+                  type: array
+                  items:
+                    type: string
+            example:
+              strong:
+                - стоять
+                - лопата
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Неправильный запрос
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/search/set-excluded:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Установка/удаление минус-фраз в поиске
+      description: |
+        Метод устанавливает и удаляет минус-фразы в поиске, в [кампаниях](/openapi/promotion#tag/Sozdanie-kampanij/paths/~1adv~1v2~1seacat~1save-ad/post) Аукцион.<br><br>
+
+        Данные фразы можно выбрать из списка запросов, по которым покупатели находили ваш товар. Список запросов можно получить в [статистике ключевых фраз](/openapi/analytics#tag/Statistika-po-prodvizheniyu/paths/~1adv~1v0~1stats~1keywords/get).<br>Максимально допустимое количество минус-фраз в кампании — 1000.<br>
+
+        Отправка пустого массива удаляет все минус-фразы из поиска из кампании.
+
+        <div class="description_limit">  
+          Максимум 2 запроса в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Параметры кампаний
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1234567
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                excluded:
+                  description: Минус-фразы (макс. 1000 шт.)
+                  type: array
+                  items:
+                    type: string
+            example:
+              excluded:
+                - что-то синее
+                - картошечка
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Неправильный запрос
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/auto/set-excluded:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Установка/удаление минус-фраз для автоматической кампании
+      description: |
+        Метод устанавливает и удаляет минус-фразы для [автоматической кампании](/openapi/promotion#tag/Sozdanie-kampanij/paths/~1adv~1v1~1save-ad/post).<br><br>
+
+        Данные фразы можно выбрать из списка запросов, по которым покупатели находили ваш товар. Список запросов можно получить в [статистике ключевых фраз](/openapi/analytics#tag/Statistika-po-prodvizheniyu/paths/~1adv~1v0~1stats~1keywords/get).<br>
+
+        Отправка пустого массива удаляет все минус-фразы из кампании.
+
+        <div class="description_limit">  
+          Максимум 1 запрос в 6 <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунд</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Параметры кампаний
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1234567
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                excluded:
+                  description: Список фраз (макс. 1000 шт.)
+                  type: array
+                  items:
+                    type: string
+            examples:
+              SettingMinusPhrase:
+                $ref: '#/components/examples/SettingMinusPhrase'
+              RemovingMinusPhrase:
+                $ref: '#/components/examples/RemovingMinusPhrase'
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Неправильный запрос
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/auto/getnmtoadd:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Список карточек товаров для автоматической кампании
+      description: |
+        Метод формирует [список карточек товаров](/openapi/promotion#tag/Sozdanie-kampanij/paths/~1adv~1v2~1supplier~1nms/post), которые можно добавить в автоматическую кампанию.<br><br>
+
+        <div class="description_limit">  
+          Максимум 1 запрос в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Параметры кампаний
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1
+          required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: integer
+              example:
+                - 1111111111
+                - 2222222222
+                - 3333333333
+                - 4444444444
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/auto/updatenm:
+    servers:
+      - url: https://advert-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      summary: Изменение списка карточек товаров в автоматической кампании
+      description: |
+        Метод добавляет и удаляет карточки товаров в автоматической кампании.<br><br>
+
+        <div class="description_important">
+          Добавить можно только те карточки товаров, которые вернутся в <a href="/openapi/promotion#tag/Parametry-avtomaticheskih-kampanij/paths/~1adv~1v1~1auto~1getnmtoadd/get">списке карточек товаров для автоматической кампании</a>.<br>Удалить единственную карточку товара из кампании нельзя.
+        </div>
+
+        Проверки по параметру `delete` не предусмотрено.
+
+        Если пришел ответ со статус-кодом `200`, а изменений не произошло, проверьте, чтобы запрос соответствовал документации.
+
+        <div class="description_limit">  
+          Максимум 60 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">минуту</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Параметры кампаний
+      parameters:
+        - name: id
+          in: query
+          description: ID кампании
+          schema:
+            type: integer
+            example: 1
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                add:
+                  description: Карточки товаров, которые необходимо добавить.
+                  type: array
+                  items:
+                    type: integer
+                delete:
+                  description: Карточки товаров, которые необходимо удалить.
+                  type: array
+                  items:
+                    type: integer
+            example:
+              add:
+                - 11111111
+                - 44444444
+              delete:
+                - 55555555
+      responses:
+        '200':
+          description: Успешно
+        '400':
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/responseAdvError1'
+              examples:
+                CampaignNotFoundAdv:
+                  $ref: '#/components/examples/CampaignNotFoundAdv'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/count:
+    servers:
+      - url: https://advert-media-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Количество медиакампаний
+      description: |
+        Метод предоставляет количество [медиакампаний](/openapi/promotion#tag/Media/paths/~1adv~1v1~1advert/get) продавца с группировкой по статусам.
+
+        <div class="description_limit">  
+          Максимум 10 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Медиа
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  all:
+                    description: Общее количество медиакампаний всех статусов и типов
+                    type: integer
+                  adverts:
+                    type: object
+                    properties:
+                      type:
+                        description: |
+                          <dl>
+                          <dt>Тип медиакампании:</dt>
+                          <dd><code>1</code> - размещение по дням</dd>
+                          <dd><code>2</code> - размещение по просмотрам</dd>
+                          </dl>
+                        type: integer
+                      status:
+                        description: |
+                          <dl>
+                          <dt>Статус медиакампании:</dt>
+                            <dd><code>1</code> - черновик</dd>
+                            <dd><code>2</code> - модерация
+                            <dd><code>3</code> - отклонено (с возможностью вернуть на модерацию)</dd>
+                            <dd><code>4</code> - готово к запуску</dd>
+                            <dd><code>5</code> - запланировано</dd>
+                            <dd><code>6</code> - на показах</dd>
+                            <dd><code>7</code> - завершено</dd>
+                            <dd><code>8</code> - отказался</dd>
+                            <dd><code>9</code> - приостановлена продавцом</dd>
+                            <dd><code>10</code> - пауза по дневному лимиту</dd>
+                            <dd><code>11</code> - пауза</dd>
+                          </dl>
+                        type: integer
+                      count:
+                        description: Количество медиакампаний
+                        type: integer
+              example:
+                all: 6
+                adverts:
+                  type: 2
+                  status: 7
+                  count: 2
+                '[object Object]': null
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/adverts:
+    servers:
+      - url: https://advert-media-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Список медиакампаний
+      description: |
+        Метод предоставляет список всех [медиакампаний](/openapi/promotion#tag/Media/paths/~1adv~1v1~1advert/get) продавца по их типам и статусам.
+
+        <div class="description_limit">  
+          Максимум 10 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Медиа
+      parameters:
+        - name: status
+          in: query
+          description: |
+            <dl>
+            <dt>Статус медиакампании:</dt>
+              <dd><code>1</code> - черновик</dd>
+              <dd><code>2</code> - модерация
+              <dd><code>3</code> - отклонено (с возможностью вернуть на модерацию)</dd>
+              <dd><code>4</code> - готово к запуску</dd>
+              <dd><code>5</code> - запланировано</dd>
+              <dd><code>6</code> - на показах</dd>
+              <dd><code>7</code> - завершено</dd>
+              <dd><code>8</code> - отказался</dd>
+              <dd><code>9</code> - приостановлена продавцом</dd>
+              <dd><code>10</code> - пауза по дневному лимиту</dd>
+              <dd><code>11</code> - пауза</dd>
+            </dl>
+          schema:
+            type: integer
+            example: 1
+        - name: type
+          in: query
+          description: |
+            <dl>
+            <dt>Тип медиакампании:</dt>
+            <dd><code>1</code> - размещение по дням</dd>
+            <dd><code>2</code> - размещение по просмотрам</dd>
+            </dl>
+          schema:
+            type: integer
+            example: 1
+        - name: limit
+          in: query
+          description: Количество кампаний в ответе
+          schema:
+            type: integer
+            example: 1
+        - name: offset
+          in: query
+          description: Смещение относительно первой медиакампании
+          schema:
+            type: integer
+            example: 1
+        - name: order
+          in: query
+          description: |
+            <dl>
+            <dt>Порядок вывода ответа:</dt>
+            <dd><code>create</code> - по времени создания медиакампании</dd>
+            <dd><code>id</code> - по ID медиакампании</dd>
+            </dl>
+          schema:
+            type: string
+            example: id
+        - name: direction
+          in: query
+          description: |
+            <dl>
+            <dt>Порядок сортировки:</dt>
+            <dd><code>desc</code> - от большего к меньшему</dd>
+            <dd><code>asc</code> - от меньшего к большему</dd>
+            </dl>
+          schema:
+            type: string
+            example: desc
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    advertId:
+                      description: ID медиакампании
+                      type: integer
+                    name:
+                      description: Название медиакампании
+                      type: string
+                    brand:
+                      description: Название бренда
+                      type: string
+                    type:
+                      description: |
+                        <dl>
+                        <dt>Тип медиакампании:</dt>
+                        <dd><code>1</code> - размещение по дням</dd>
+                        <dd><code>2</code> - размещение по просмотрам</dd>
+                        </dl>
+                      type: integer
+                    status:
+                      description: |
+                        <dl>
+                        <dt>Статус медиакампании:</dt>
+                          <dd><code>1</code> - черновик</dd>
+                          <dd><code>2</code> - модерация
+                          <dd><code>3</code> - отклонено (с возможностью вернуть на модерацию)</dd>
+                          <dd><code>4</code> - готово к запуску</dd>
+                          <dd><code>5</code> - запланировано</dd>
+                          <dd><code>6</code> - на показах</dd>
+                          <dd><code>7</code> - завершено</dd>
+                          <dd><code>8</code> - отказался</dd>
+                          <dd><code>9</code> - приостановлена продавцом</dd>
+                          <dd><code>10</code> - пауза по дневному лимиту</dd>
+                          <dd><code>11</code> - пауза</dd>
+                        </dl>
+                      type: integer
+                    createTime:
+                      description: Время создания медиакампании
+                      type: string
+                      format: date-time
+                    endTime:
+                      description: Время завершения медиакампании
+                      type: string
+                      format: date-time
+              example:
+                - advertId: 123456
+                  name: тост
+                  brand: goosb
+                  type: 2
+                  status: 8
+                  createTime: '2023-03-25T20:35:57.116943+03:00'
+                - advertId: 54321
+                  name: тест
+                  brand: bobr
+                  type: 1
+                  status: 7
+                  createTime: '2023-07-24T16:48:20.935599+03:00'
+                  endTime: '2023-07-25T20:35:50.104978Z'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /adv/v1/advert:
+    servers:
+      - url: https://advert-media-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      summary: Информация о медиакампании
+      description: |
+        Метод предоставляет информацию об одной кампании [ВБ.Медиа](https://cmp.wildberries.ru/cmpf/list). Вместо карточек товаров в медиакампаниях продвигаются рекламные баннеры продавца на сайте и в приложении WB.
+
+        <div class="description_limit">  
+          Максимум 10 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунду</a> на один аккаунт продавца
+        </div>
+      tags:
+        - Медиа
+      parameters:
+        - name: id
+          in: query
+          description: ID медиакампании
+          schema:
+            type: integer
+            example: 23569
+          required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  advertId:
+                    description: ID медиакампании
+                    type: integer
+                  name:
+                    description: Название медиакампании
+                    type: string
+                  brand:
+                    description: Название бренда
+                    type: string
+                  type:
+                    description: |
+                      <dl>
+                      <dt>Тип медиакампании:</dt>
+                      <dd><code>1</code> - размещение по дням</dd>
+                      <dd><code>2</code> - размещение по просмотрам</dd>
+                      </dl>
+                    type: integer
+                  status:
+                    description: |
+                      <dl>
+                      <dt>Статус медиакампании:</dt>
+                        <dd><code>1</code> - черновик</dd>
+                        <dd><code>2</code> - модерация
+                        <dd><code>3</code> - отклонено (с возможностью вернуть на модерацию)</dd>
+                        <dd><code>4</code> - готово к запуску</dd>
+                        <dd><code>5</code> - запланировано</dd>
+                        <dd><code>6</code> - на показах</dd>
+                        <dd><code>7</code> - завершено</dd>
+                        <dd><code>8</code> - отказался</dd>
+                        <dd><code>9</code> - приостановлена продавцом</dd>
+                        <dd><code>10</code> - пауза по дневному лимиту</dd>
+                        <dd><code>11</code> - пауза</dd>
+                      </dl>
+                    type: integer
+                  createTime:
+                    description: Время создания медиакампании
+                    type: string
+                    format: date-time
+                  extended:
+                    type: object
+                    properties:
+                      reason:
+                        description: Комментарий модератора
+                        nullable: true
+                        type: string
+                      expenses:
+                        description: Затраты
+                        type: integer
+                      from:
+                        description: Начало показов медиакампании
+                        type: string
+                        format: date-time
+                      to:
+                        description: Конец показов медиакампании
+                        type: string
+                        format: date-time
+                      updated_at:
+                        description: Время изменения медиакампании
+                        type: string
+                        format: date-time
+                      price:
+                        description: Стоимость размещения по дням (для типа 1)
+                        type: integer
+                      budget:
+                        description: Остаток бюджета (для типа 2)
+                        type: integer
+                      operation:
+                        description: Источник списания (1 - баланс, 2 - счет)
+                        type: integer
+                      contract_id:
+                        description: ID контракта (для продавцов на контракте)
+                        type: integer
+                  items:
+                    description: |
+                      Информация о баннере.
+                      <br>
+                      Наличие в ответе тех или иных полей зависит от конфигурации медиакампании.
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          description: ID баннера
+                          type: integer
+                        name:
+                          description: Бренд
+                          type: string
+                        status:
+                          description: Статус (такой же как у медиакампании)
+                          type: integer
+                        place:
+                          description: Позиция на странице размещения
+                          type: integer
+                        budget:
+                          description: Бюджет
+                          type: integer
+                        daily_limit:
+                          description: Дневной лимит (для баннеров по показам)
+                          type: integer
+                        category_name:
+                          description: Название категории размещения
+                          type: string
+                        cpm:
+                          description: Ставка
+                          type: integer
+                        url:
+                          description: URL страницы, на которую попадает пользователь при клике по баннеру
+                          type: string
+                        advert_type:
+                          description: |
+                            <dl>
+                            <dt>Тип продвижения:</dt>
+                            <dd><code>1</code> - баннер</dd>
+                            <dd><code>2</code> - всплывающее меню</dd>
+                            <dd><code>3</code> - почтовая рассылка</dd>
+                            <dd><code>4</code> - социальные сети</dd>
+                            <dd><code>5</code> - push-уведомления в мобильном приложении</dd>
+                            </dl>
+                          type: integer
+                        created_at:
+                          description: Дата создания баннера
+                          format: date-time
+                          type: string
+                        updated_at:
+                          description: Дата обновления баннера
+                          format: date-time
+                          type: string
+                        date_from:
+                          description: Дата начала работы баннера
+                          format: date-time
+                          type: string
+                        date_to:
+                          description: Дата завершения работы баннера
+                          format: date-time
+                          type: string
+                        nms:
+                          description: Подборка артикулов WB
+                          type: array
+                          items:
+                            type: integer
+                        bottomText1:
+                          description: Текст под плашкой баннера
+                          type: string
+                        bottomText2:
+                          description: 2-я строка с текстом под плашкой баннера
+                          type: string
+                        message:
+                          description: Текст push-уведомления или рассылки
+                          type: string
+                        additionalSettings:
+                          description: |
+                            Дополнительные настройки.
+                            <dl>
+                            <dt>Формат почтовой рассылки:</dt>
+                            <dd><code>1</code> - общий</dd>
+                            <dd><code>2</code> - частичный</dd>
+                            <dd><code>3</code> - уникальный</dd>
+                            </dl>
+                            <dl>
+                            <dt>Социальная сеть:</dt>
+                            <dd><code>1</code> - VKontakte</dd>
+                            <dd><code>2</code> - OK (Одноклассники)</dd>
+                            </dl>
+                          type: integer
+                        receiversCount:
+                          description: Кол-во получателей push-уведомлений
+                          type: integer
+                        subject_id:
+                          description: ID родительской категории товара
+                          type: integer
+                        subject_name:
+                          description: Название родительской категории товара
+                          type: string
+                        action_name:
+                          description: Название акции
+                          type: string
+                        show_hours:
+                          description: Часы показа
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              From:
+                                description: Начало показа
+                                type: integer
+                              To:
+                                description: Конец показа
+                                type: integer
+                        Erid:
+                          description: Уникальный ID медиакампании для работы с ОРД
+                          type: string
+                example:
+                  advertId: 23569
+                  name: Реклама денег принеси
+                  brand: Plank
+                  type: 2
+                  status: 11
+                  createTime: '2023-07-19T11:13:41.195138+03:00'
+                  extended:
+                    reason: Для возобновления показов пополните бюджет медиакампании
+                    expenses: 10000
+                    from: '2023-07-19T12:05:35.847348Z'
+                    to: '2123-07-20T08:14:13.079176+03:00'
+                    updated_at: '2023-07-21T13:25:31.129766+03:00'
+                    price: 0
+                    budget: 0
+                    operation: 1
+                    contract_id: 0
+                  items:
+                    - id: 68080
+                      name: Унисон
+                      status: 7
+                      place: 2
+                      budget: 650000
+                      daily_limit: 500
+                      category_name: Главная
+                      cpm: 351
+                      url: https://www.wildberries.ru/promotions/ssylka-na-akciyou
+                      advert_type: 1
+                      created_at: '2023-11-01T15:40:46.86165+03:00'
+                      updated_at: '2023-11-08T23:44:33.248229+03:00'
+                      date_from: '2023-11-01T16:05:22.286002Z'
+                      date_to: '2023-11-09T17:27:32.745869+03:00'
+                      nms:
+                        - 123456
+                        - 11111111
+                      bottomText1: string
+                      bottomText2: string
+                      message: string
+                      additionalSettings: 1
+                      receiversCount: 1
+                      subject_id: 6945
+                      subject_name: Бельё
+                      action_name: Распродажа! Создай себе домашний уют!
+                      show_hours:
+                        - From: 7
+                          To: 8
+                      Erid: string
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /api/v1/calendar/promotions:
+    servers:
+      - url: https://dp-calendar-api.wildberries.ru
+    get:
+      tags:
+        - Календарь акций
+      security:
+        - HeaderApiKey: []
+      summary: Список акций
+      description: |
+        Метод предоставляет список [акций](/openapi/promotion#tag/Kalendar-akcij/paths/~1api~1v1~1calendar~1promotions~1details/get) в WB с датами и временем проведения.
+
+        <div class="description_limit">  
+          Максимум 10 запросов за 6 <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунд</a> для всех методов <a href="/openapi/promotion#tag/Kalendar-akcij">Календаря акций</a> на один аккаунт продавца
+        </div>
+      parameters:
+        - $ref: '#/components/parameters/startDateTime'
+        - $ref: '#/components/parameters/endDateTime'
+        - $ref: '#/components/parameters/allPromo'
+        - $ref: '#/components/parameters/limitPromotion'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/PromotionsSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorFailedParseData'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /api/v1/calendar/promotions/details:
+    servers:
+      - url: https://dp-calendar-api.wildberries.ru
+    get:
+      tags:
+        - Календарь акций
+      security:
+        - HeaderApiKey: []
+      summary: Детальная информация об акциях
+      description: |
+        Метод предоставляет подробную информацию об [акции](/openapi/promotion#tag/Kalendar-akcij/paths/~1api~1v1~1calendar~1promotions~1details/get) по ID.
+
+        <div class="description_limit">  
+          Максимум 10 запросов за 6 <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунд</a> для всех методов <a href="/openapi/promotion#tag/Kalendar-akcij">Календаря акций</a> на один аккаунт продавца
+        </div>
+      parameters:
+        - $ref: '#/components/parameters/promotionIDs'
+      responses:
+        '200':
+          $ref: '#/components/responses/PromotionsGetByIDSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorFailedParseData'
+        '401':
+          $ref: '#/components/responses/401'
+        '429':
+          $ref: '#/components/responses/429'
+  /api/v1/calendar/promotions/nomenclatures:
+    servers:
+      - url: https://dp-calendar-api.wildberries.ru
+    get:
+      tags:
+        - Календарь акций
+      security:
+        - HeaderApiKey: []
+      summary: Список товаров для участия в акции
+      description: |
+        Метод формирует список товаров, подходящих для участия в [акции](/openapi/promotion#tag/Kalendar-akcij/paths/~1api~1v1~1calendar~1promotions~1details/get). Эти товары можно добавить в акцию с помощью [отдельного метода](/openapi/promotion#tag/Kalendar-akcij/paths/~1api~1v1~1calendar~1promotions~1upload/post).
+
+        <div class="description_important"> 
+          Данный метод неприменим для автоакций.
+        </div>
+
+        <div class="description_limit">  
+          Максимум 10 запросов за 6 <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунд</a> для всех методов <a href="/openapi/promotion#tag/Kalendar-akcij">Календаря акций</a> на один аккаунт продавца
+        </div>
+      parameters:
+        - $ref: '#/components/parameters/promotionID'
+        - $ref: '#/components/parameters/inAction'
+        - $ref: '#/components/parameters/limitNomenclature'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponsePromotionsGoodsLists'
+        '400':
+          $ref: '#/components/responses/ErrorWrongParameters'
+        '401':
+          $ref: '#/components/responses/401'
+        '422':
+          $ref: '#/components/responses/ErrParameterValuesIncorrect'
+        '429':
+          $ref: '#/components/responses/429'
+  /api/v1/calendar/promotions/upload:
+    servers:
+      - url: https://dp-calendar-api.wildberries.ru
+    post:
+      tags:
+        - Календарь акций
+      security:
+        - HeaderApiKey: []
+      summary: Добавить товар в акцию
+      description: |
+        Метод создаёт задание на загрузку товара в [акцию](/openapi/promotion#tag/Kalendar-akcij/paths/~1api~1v1~1calendar~1promotions~1details/get).<br>
+        Состояние загрузки можно проверить с помощью [отдельных методов](/openapi/work-with-products#tag/Ceny-i-skidki/paths/~1api~1v2~1history~1tasks/get).
+
+        <div class="description_important"> 
+          Данный метод неприменим для автоакций.
+        </div>
+
+        <div class="description_limit">  
+          Максимум 10 запросов за 6 <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">секунд</a> для всех методов <a href="/openapi/promotion#tag/Kalendar-akcij">Календаря акций</a> на один аккаунт продавца
+        </div>
+      requestBody:
+        $ref: '#/components/requestBodies/PromotionsSupplierTaskRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/UploadSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorWrongParameters'
+        '401':
+          $ref: '#/components/responses/401'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/429'
+components:
+  schemas:
+    V0GetConfigCategoriesResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID категории товара
+        name:
+          type: string
+          description: Название категории товара
+        cpm_min:
+          type: integer
+          description: Минимально допустимая ставка
+      required:
+        - id
+        - name
+        - cpm_min
+      example:
+        id: 760
+        name: Автомобильные товары
+        cpm_min: 112
+    V0AdvertMultiBidItem:
+      type: object
+      required:
+        - nm
+        - bid
+      properties:
+        nm:
+          type: integer
+          example: 3462354
+          description: Артикул WB
+        bid:
+          type: integer
+          example: 500
+          description: Ставка. Минимально допустимые ставки для категорий товаров и типов кампаний см. в ответе метода получения [конфигурационных значений](./promotion#tag/Sozdanie-kampanij/paths/~1adv~1v0~1config/get)
+    V0AdvertMultibid:
+      type: object
+      required:
+        - advert_id
+        - nm_bids
+      properties:
+        advert_id:
+          type: integer
+          example: 6348555
+          description: ID кампании
+        nm_bids:
+          type: array
+          description: Артикулы WB и ставки для них
+          items:
+            $ref: '#/components/schemas/V0AdvertMultiBidItem'
+    ResponseWithReturn:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Размер обновлённого бюджета
+    ResponseInfoAdvert:
+      type: object
+      properties:
+        endTime:
+          description: Дата завершения кампании
+          type: string
+        createTime:
+          description: Время создания кампании
+          type: string
+          example: '2022-03-09T10:50:21.831623+03:00'
+        changeTime:
+          description: Время последнего изменения кампании
+          type: string
+          example: '2022-12-22T18:24:19.808701+03:00'
+        startTime:
+          description: Дата последнего запуска кампании
+          type: string
+        name:
+          description: Название кампании
+          type: string
+        params:
+          description: Параметры кампании
+          type: array
+          items:
+            type: object
+            properties:
+              subjectName:
+                description: Название предметной группы (для кампаний в поиске и рекомендациях (<strong>устаревшие типы кампаний</strong>))
+                type: string
+              active:
+                description: Флаг активности предметной группы, <code>true</code> - активна, <code>false</code> - неактивна
+                type: boolean
+              intervals:
+                description: Интервалы часов показа кампании
+                type: array
+                items:
+                  type: object
+                  properties:
+                    Begin:
+                      description: Время начала показов
+                      type: integer
+                    End:
+                      description: Время окончания показов
+                      type: integer
+              price:
+                description: Текущая ставка
+                type: integer
+              menuId:
+                description: ID меню, где размещается кампания (для кампаний в каталоге (<strong>устаревший тип кампании</strong>))
+                type: integer
+              subjectId:
+                description: ID предметной группы, для которой создана кампания (для кампаний в поиске и рекомендациях (<strong>устаревшие типы кампаний</strong>))
+                type: integer
+              setId:
+                description: ID сочетания предмета и пола (для кампаний в карточке товара (<strong>устаревший тип кампании</strong>))
+                type: integer
+              setName:
+                description: Сочетание предмета и пола (для кампаний в карточке товара (<strong>устаревший тип кампании</strong>))
+                type: string
+              menuName:
+                description: Название меню, где размещается кампания (для кампаний в каталоге (<strong>устаревший тип кампании</strong>))
+                type: string
+              nms:
+                description: Массив карточек товаров кампании
+                type: array
+                items:
+                  type: object
+                  properties:
+                    nm:
+                      type: integer
+                      description: Числовой ID карточки товара WB (<code>nmId</code>)
+                    active:
+                      type: boolean
+                      description: Состояние карточки товара (<code>true</code> - активна или <code>false</code> - неактивна)
+        dailyBudget:
+          description: Дневной бюджет, если не установлен, то 0
+          type: integer
+        advertId:
+          description: ID кампании
+          type: integer
+          example: 1234
+        status:
+          description: |
+            <dl>
+            <dt>Статус кампании:</dt>
+            <dd><code>-1</code> - кампания в процессе удаления </dd>
+            <dd><code>4</code> - готова к запуску </dd>
+            <dd><code>7</code> - завершено</dd>
+            <dd><code>8</code> - отказался</dd>
+            <dd><code>9</code> - активно</dd>
+            <dd><code>11</code> - кампания на паузе</dd>
+            </dl>
+            Кампания в процессе удаления. Статус означает, что кампания была удалена, и через 3-10 минут она исчезнет из ответа метода.
+              
+          type: integer
+          example: 9
+        type:
+          description: |
+            <dl>
+              <dt>Тип кампании:</dt>
+                <dd><code>4</code> - кампания в каталоге (<strong>устаревший тип</strong>)</dd>
+                <dd><code>5</code> - кампания в карточке товара (<strong>устаревший тип</strong>)</dd>
+                <dd><code>6</code> - кампания в поиске (<strong>устаревший тип</strong>)</dd>
+                <dd><code>7</code> - кампания в рекомендациях на главной странице (<strong>устаревший тип</strong>)</dd>
+              </dl>
+          type: integer
+          example: 4
+        paymentType:
+          type: string
+          description: |
+            Модель оплаты:
+            - `cpm` — за показы
+        searchPluseState:
+          type: boolean
+          description: |
+            Активность фиксированных фраз:
+              - `false` — не активны
+              - `true` — активны
+    ResponseInfoAdvertType8:
+      type: object
+      properties:
+        endTime:
+          description: Дата завершения кампании
+          type: string
+          format: date-time
+        createTime:
+          description: Дата создания кампании
+          type: string
+          format: date-time
+        changeTime:
+          description: Дата последнего изменения кампании
+          type: string
+          format: date-time
+        startTime:
+          description: Дата последнего запуска кампании
+          type: string
+          format: date-time
+        autoParams:
+          type: object
+          properties:
+            subject:
+              description: Продвигаемый предмет
+              type: object
+              properties:
+                id:
+                  description: ID предмета
+                  type: integer
+                name:
+                  description: Название предмета
+                  type: string
+            sets:
+              description: Внутренняя (системная) сущность (пол + предмет)
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    description: ID set
+                    type: integer
+                  name:
+                    description: Название set
+                    type: string
+            menus:
+              type: array
+              items:
+                type: object
+                description: Меню, где размещается кампания
+                properties:
+                  id:
+                    description: ID меню
+                    type: integer
+                  name:
+                    description: Название меню
+                    type: string
+            active:
+              description: Зоны показов
+              type: object
+              properties:
+                carousel:
+                  description: Карточка товара (`false` - отключены, `true` - включены)
+                  type: boolean
+                recom:
+                  description: Рекомендации на главной (`false` - отключены, `true` - включены)
+                  type: boolean
+                booster:
+                  description: Аукцион (`false` - отключены, `true` - включены)
+                  type: boolean
+            nmCPM:
+              type: array
+              description: |
+                Ставки карточек товаров (артикулов WB)
+              items:
+                type: object
+                properties:
+                  nm:
+                    description: Артикул WB
+                    type: integer
+                  cpm:
+                    description: Ставка
+                    type: integer
+            nms:
+              description: Артикулы WB
+              type: array
+              items:
+                type: integer
+            cpm:
+              description: |
+                Ставка, указанная при создании кампании.<br>  Поле актуально только для кампаний, созданных через API.  
+              type: integer
+        name:
+          description: Название кампании
+          type: string
+        dailyBudget:
+          description: Не используется
+          type: integer
+        advertId:
+          description: ID кампании
+          type: integer
+        status:
+          description: |
+            <dl> <dt>Статус кампании:</dt> <dd><code>-1</code> - кампания
+            в процессе удаления </dd> <dd><code>4</code>
+            - готова к запуску </dd> <dd><code>7</code> - завершено</dd>
+            <dd><code>8</code> - отказался</dd> <dd><code>9</code> - активно</dd>
+            <dd><code>11</code> - кампания на паузе</dd> </dl> Кампания в процессе
+            удаления. Статус означает, что кампания была удалена, и через 3-10 минут
+            она исчезнет из ответа метода.
+          type: integer
+        type:
+          description: |
+            <dl> <dt>Тип кампании:</dt> <dd><code>8</code> - автоматическая
+            кампания </dd> </dl>
+          type: integer
+        paymentType:
+          type: string
+          description: |
+            Модель оплаты:
+            - `cpm` — за показы
+    ResponseInfoAdvertType9:
+      type: object
+      properties:
+        endTime:
+          description: Дата завершения кампании
+          type: string
+          format: date-time
+        createTime:
+          description: Дата создания кампании
+          type: string
+          format: date-time
+        changeTime:
+          description: Дата последнего изменения кампании
+          type: string
+          format: date-time
+        startTime:
+          description: Дата последнего запуска кампании
+          type: string
+          format: date-time
+        searchPluseState:
+          type: boolean
+          description: |
+            Активность фиксированных фраз:
+              - `false` — не активны
+              - `true` — активны
+        name:
+          description: Название кампании
+          type: string
+        unitedParams:
+          type: array
+          items:
+            type: object
+            properties:
+              subject:
+                type: object
+                description: Продвигаемый предмет
+                properties:
+                  id:
+                    description: ID предмета
+                    type: integer
+                  name:
+                    description: Название предмета
+                    type: string
+              menus:
+                type: array
+                items:
+                  type: object
+                  description: Меню, где размещается кампания
+                  properties:
+                    id:
+                      description: ID меню
+                      type: integer
+                    name:
+                      description: Название меню
+                      type: string
+              nms:
+                description: Артикулы WB
+                type: array
+                items:
+                  type: integer
+              searchCPM:
+                description: Ставка в поиске
+                type: integer
+              catalogCPM:
+                description: Ставка в Каталоге
+                type: integer
+        dailyBudget:
+          description: Не используется
+          type: integer
+        advertId:
+          description: ID кампании
+          type: integer
+        status:
+          description: |
+            <dl> <dt>Статус кампании:</dt> <dd><code>-1</code> - кампания
+            в процессе удаления </dd> <dd><code>4</code>
+            - готова к запуску </dd> <dd><code>7</code> - завершено</dd>
+            <dd><code>8</code> - отказался</dd> <dd><code>9</code> - активно</dd>
+            <dd><code>11</code> - кампания на паузе</dd> </dl> Кампания в процессе
+            удаления. Статус означает, что кампания была удалена, и через 3-10 минут
+            она исчезнет из ответа метода.
+          type: integer
+        type:
+          description: |
+            <dl> <dt>Тип кампании:</dt> <dd><code>9</code> - Аукцион
+            </dd> </dl>
+          type: integer
+        paymentType:
+          type: string
+          description: |
+            Модель оплаты:
+            - `cpm` — за показы
+        auction_multibids:
+          type: array
+          description: Ставки артикулов WB
+          items:
+            type: object
+            properties:
+              nm:
+                description: Артикул WB
+                type: integer
+              cpm:
+                description: Ставка
+                type: integer
+    responseAdvError1:
+      type: object
+      properties:
+        error:
+          type: string
+    PromotionsGoodsList:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 162579635
+          description: ID карточки товара
+        inAction:
+          type: boolean
+          example: true
+          description: |
+            Участвует в акции:
+              - `true` — да
+              - `false` — нет
+        price:
+          type: number
+          format: float
+          example: 1500
+          description: Текущая розничная цена
+        currencyCode:
+          type: string
+          example: RUB
+          description: Валюта в формате ISO 4217
+        planPrice:
+          type: number
+          format: float
+          example: 1000
+          description: Плановая цена (цена во время акции)
+        discount:
+          type: integer
+          example: 15
+          description: Текущая скидка
+        planDiscount:
+          type: integer
+          example: 34
+          description: Рекомендуемая скидка для участия в акции
+  parameters:
+    inAction:
+      in: query
+      name: inAction
+      description: |
+        Участвует в акции:
+          - `true` — да
+          - `false` — нет
+      schema:
+        type: boolean
+        example: true
+        default: false
+      required: true
+    promotionID:
+      in: query
+      name: promotionID
+      description: ID акции
+      schema:
+        type: integer
+        example: 1
+      required: true
+    limitNomenclature:
+      in: query
+      name: limit
+      description: Количество запрашиваемых товаров
+      schema:
+        type: integer
+        format: uint
+        minimum: 1
+        maximum: 1000
+        example: 10
+    promotionIDs:
+      in: query
+      description: ID акций, по которым нужно вернуть информацию
+      name: promotionIDs
+      required: true
+      schema:
+        type: string
+        items:
+          type: integer
+        example:
+          - 1
+          - 3
+          - 64
+        uniqueItems: true
+        minItems: 1
+        maxItems: 100
+    offset:
+      in: query
+      name: offset
+      description: После какого элемента выдавать данные
+      schema:
+        type: integer
+        format: uint
+        minimum: 0
+        example: 0
+    startDateTime:
+      in: query
+      name: startDateTime
+      description: Начало периода, формат `YYYY-MM-DDTHH:MM:SSZ`
+      required: true
+      schema:
+        type: string
+        format: RFC3339
+        example: '2023-09-01T00:00:00Z'
+    endDateTime:
+      in: query
+      name: endDateTime
+      description: Конец периода, формат `YYYY-MM-DDTHH:MM:SSZ`
+      required: true
+      schema:
+        type: string
+        format: RFC3339
+        example: '2024-08-01T23:59:59Z'
+    allPromo:
+      in: query
+      name: allPromo
+      description: |
+        Показать акции:
+          - `false` — доступные для участия
+          - `true` — все акции
+      schema:
+        type: boolean
+        default: false
+      required: true
+    limitPromotion:
+      in: query
+      name: limit
+      description: Количество запрашиваемых акций
+      schema:
+        type: integer
+        format: uint
+        minimum: 1
+        maximum: 1000
+        example: 10
+  requestBodies:
+    PromotionsSupplierTaskRequest:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  promotionID:
+                    type: integer
+                    description: ID акции
+                    example: 1
+                    minimum: 1
+                  uploadNow:
+                    type: boolean
+                    example: true
+                    description: |
+                      Установить скидку:
+                        - `true` — сейчас
+                        - `false` — в момент старта акции
+                  nomenclatures:
+                    type: array
+                    description: ID карточек товаров, которые можно добавить в акцию
+                    example:
+                      - 1
+                      - 3
+                      - 642
+                    items:
+                      type: integer
+                      minimum: 1
+                    minItems: 1
+                    maxItems: 1000
+                    uniqueItems: true
+  responses:
+    '401':
+      description: Пользователь не авторизован
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                description: Заголовок ошибки
+              detail:
+                type: string
+                description: Детали ошибки
+              code:
+                type: string
+                description: Внутренний код ошибки
+              requestId:
+                type: string
+                description: Уникальный ID запроса
+              origin:
+                type: string
+                description: ID внутреннего сервиса WB
+              status:
+                type: number
+                description: HTTP статус-код
+              statusText:
+                type: string
+                description: Расшифровка HTTP статус-кода
+              timestamp:
+                type: string
+                format: date-time
+                description: Дата и время запроса
+          example:
+            title: unauthorized
+            detail: 'token problem; token is malformed: could not base64 decode signature: illegal base64 data at input byte 84'
+            code: 07e4668e--a53a3d31f8b0-[UK-oWaVDUqNrKG]; 03bce=277; 84bd353bf-75
+            requestId: 7b80742415072fe8b6b7f7761f1d1211
+            origin: s2s-api-auth-catalog
+            status: 401
+            statusText: Unauthorized
+            timestamp: '2024-09-30T06:52:38Z'
+    '429':
+      description: Слишком много запросов
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                description: Заголовок ошибки
+              detail:
+                type: string
+                description: Детали ошибки
+              code:
+                type: string
+                description: Внутренний код ошибки
+              requestId:
+                type: string
+                description: Уникальный ID запроса
+              origin:
+                type: string
+                description: ID внутреннего сервиса WB
+              status:
+                type: number
+                description: HTTP статус-код
+              statusText:
+                type: string
+                description: Расшифровка HTTP статус-кода
+              timestamp:
+                type: string
+                format: date-time
+                description: Дата и время запроса
+          example:
+            title: too many requests
+            detail: limited by c122a060-a7fb-4bb4-abb0-32fd4e18d489
+            code: 07e4668e-ac2242c5c8c5-[UK-4dx7JUdskGZ]
+            requestId: 9d3c02cc698f8b041c661a7c28bed293
+            origin: s2s-api-auth-catalog
+            status: 429
+            statusText: Too Many Requests
+            timestamp: '2024-09-30T06:52:38Z'
+    ErrParameterValuesIncorrect:
+      description: Ошибка обработки параметров запроса
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errorText:
+                type: string
+                description: Текст ошибки
+          examples:
+            PromotionCompletedOrNotExist:
+              description: Акция завершена, или акция с данным id не существует
+              value:
+                errorText: Unprocessable entity
+    ErrorWrongParameters:
+      description: Неправильный запрос
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errorText:
+                type: string
+                description: Текст ошибки
+                example: Invalid query params
+    ResponsePromotionsGoodsLists:
+      description: Успешно
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  nomenclatures:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PromotionsGoodsList'
+    UploadSuccessResponse:
+      description: Успешно
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  alreadyExists:
+                    description: Загрузка с такими данными уже существует
+                    type: boolean
+                    example: false
+                  uploadID:
+                    description: ID загрузки
+                    type: integer
+                    example: 11
+    UnprocessableEntity:
+      description: Ошибка обработки параметров запроса
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errorText:
+                type: string
+                example: Unprocessable entity
+    PromotionsGetByIDSuccessResponse:
+      description: Успешно
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  promotions:
+                    type: array
+                    description: Список акций
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: ID акции
+                          example: 123
+                        name:
+                          type: string
+                          description: Название акции
+                          example: ХИТЫ ГОДА
+                        description:
+                          type: string
+                          description: Описание акции
+                          example: В акции принимают участие самые популярные товары 2023 года. Карточки товаров будут выделены плашкой «ХИТ ГОДА», чтобы покупатели замечали эти товары среди других. Также они будут размещены под баннерами на главной странице и примут участие в PUSH-уведомлениях. С ценами для вступления в акцию вы можете ознакомиться ниже.
+                        advantages:
+                          type: array
+                          description: Преимущества акции
+                          example:
+                            - Плашка
+                            - Баннер
+                            - Топ выдачи товаров
+                          items:
+                            type: string
+                        startDateTime:
+                          type: string
+                          example: '2023-06-05T21:00:00Z'
+                          description: Начало акции
+                        endDateTime:
+                          type: string
+                          example: '2023-06-05T21:00:00Z'
+                          description: Конец акции
+                        inPromoActionLeftovers:
+                          description: Количество товаров с остатками, участвующих в акции
+                          type: integer
+                          example: 45
+                        inPromoActionTotal:
+                          type: integer
+                          description: Общее количество товаров, участвующих в акции
+                          example: 123
+                        notInPromoActionLeftovers:
+                          type: integer
+                          example: 3
+                          description: Количество товаров с остатками, не участвующих в акции
+                        notInPromoActionTotal:
+                          type: integer
+                          example: 10
+                          description: Общее количество товаров, не участвующих в акции
+                        participationPercentage:
+                          type: integer
+                          description: Уже участвующие в акции товары, %. Рассчитывается по товарам в акции и с остатком
+                          example: 10
+                        type:
+                          type: string
+                          enum:
+                            - regular
+                            - auto
+                          example: auto
+                          description: |
+                            Тип акции:
+                              - `regular` — акция
+                              - `auto` — автоакция
+                        exceptionProductsCount:
+                          type: integer
+                          format: uint
+                          example: 10
+                          description: |
+                            Количество товаров, исключенных из автоакции до её старта. Только при `"type": "auto"`.
+                            <br>В момент старта акции эти товары автоматически будут без скидки
+                        ranging:
+                          type: array
+                          description: Ранжирование (если подключено)
+                          items:
+                            type: object
+                            properties:
+                              condition:
+                                type: string
+                                description: |
+                                  Тип [ранжирования](https://seller.wildberries.ru/help-center/article/A-385):
+                                    - `productsInPromotion` — продвижение получат товары продавца, участвующие в акции
+                                    - `calculateProducts` — продвижение получат любые товара продавца, предложенные к участию в акции
+                                    - `allProducts` — продвижение получат все товары продавца
+                              participationRate:
+                                type: integer
+                                format: uint
+                                minimum: 0
+                                maximum: 100
+                                description: Количество товаров продавца для перехода на следующий уровень ранжирования, %
+                              boost:
+                                type: integer
+                                format: uint
+                                description: Текущий уровень поднятия в поиске, %
+                          example:
+                            - condition: productsInPromotion
+                              participationRate: 10
+                              boost: 7
+                            - condition: calculateProducts
+                              participationRate: 20
+                              boost: 17
+                            - condition: allProducts
+                              participationRate: 35
+                              boost: 30
+    PromotionsSuccessResponse:
+      description: Успешно
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  promotions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 123
+                          description: ID акции
+                        name:
+                          type: string
+                          example: скидки
+                          description: Название акции
+                        startDateTime:
+                          type: string
+                          format: RFC3339
+                          example: '2023-06-05T21:00:00Z'
+                          description: Начало акции
+                        endDateTime:
+                          type: string
+                          format: RFC3339
+                          example: '2023-06-05T21:00:00Z'
+                          description: Конец акции
+                        type:
+                          type: string
+                          enum:
+                            - regular
+                            - auto
+                          description: |
+                            Тип акции:
+                              - `regular` — акция
+                              - `auto` — автоакция
+    ErrorFailedParseData:
+      description: Неправильный запрос
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errorText:
+                type: string
+                description: Текст ошибки
+                example: Failed to parse data
+  examples:
+    CampaignIsNotUnique:
+      description: Повторяется ID кампании. <br> В `.bids[n]` указана позиция кампании в массиве запроса `bids`
+      value:
+        errors:
+          - detail: advert 1234567 is not unique
+            field: .bids[2]
+        request_id: 2c991dcab0fe971e8c0321c340a8c7fd
+        status: 400
+        title: invalid payload
+        type: Bad Request
+    CanNotDeserializeResponseBody:
+      description: Недопустимое содержимое запроса
+      value:
+        detail: can not deserialize response body
+        origin: camp-api-public-cache
+        request_id: 49d317c56e62373b52710251280cea76
+        status: 400
+        title: invalid payload
+    CampaignNotFoundBids:
+      description: Кампания не найдена. <br> В `.bids[n]` указана позиция кампании в массиве запроса `bids`
+      value:
+        errors:
+          - detail: advert 22568519 not found
+            field: .bids[0]
+        request_id: 202707ea56b2e3ca7705ef00b1db4563
+        status: 400
+        title: invalid payload
+        type: Bad Request
+    WrongCampaignID:
+      description: Некорректный ID кампании.<br> В `.Bids[n]` указана позиция кампании в массиве запроса `bids`
+      value:
+        errors:
+          - detail: 'Key: ''V0PatchAdvertsBidsJSONBody.Bids[0].AdvertId'' Error:Field validation for ''AdvertId'' failed on the ''gt'' tag'
+            field: AdvertId
+        request_id: af8a2f59dd49a037c2ed1f6dcb7abb99
+        status: 400
+        title: validation request params error
+        type: bad request
+    WrongCampaignStatus:
+      description: Некорректный статус кампании.<br> В `.bids[n]` указана позиция кампании в массиве запроса `bids`
+      value:
+        errors:
+          - detail: 'wrong advert status: 7'
+            field: .bids[0]
+        request_id: 1dffc16267c1f9266a4d74e999f823b4
+        status: 400
+        title: invalid payload
+        type: Bad Request
+    WrongBidValue:
+      description: Некорректный размер ставки. <br> В `.bids[n]` указана позиция кампании в массиве запроса `bids`, в `.nm_bids[n]` указана позиция артикула с некорректной ставкой <br> Минимальное и максимальное значение ставки указаны в `min` и `max` соответственно
+      value:
+        errors:
+          - detail: 'wrong bid value: 100; min: 125 max:100000'
+            field: .bids[0].nm_bids[0].bid
+          - detail: 'wrong bid value: 100; min: 150 max:100000'
+            field: .bids[1].nm_bids[0].bid
+        request_id: dcf254d3eae270675cbaa1e2ff1cce60
+        status: 400
+        title: invalid payload
+        type: Bad Request
+    NmNotFound:
+      description: |
+        Артикул не найден. <br> В `.bids[n]` указана позиция кампании в массиве запроса `bids`, в `.nm_bids[n]` указана позиция ненайденного артикула этой кампании
+      value:
+        errors:
+          - detail: nm 2406138149 not found or inactive
+            field: .bids[0].nm_bids[0]
+        request_id: 2ebb8590d15c6c70e74e9cc3a9dc260b
+        status: 400
+        title: invalid payload
+        type: Bad Request
+    ResponseWithReturn:
+      description: Ответ при return=true
+      value:
+        total: 500
+    SettingMinusPhrase:
+      description: Установка минус-фраз
+      value:
+        excluded:
+          - первая фраза
+          - вторая фраза
+    RemovingMinusPhrase:
+      description: Удаление минус-фраз
+      value:
+        excluded: []
+    ResponseInvalidCampaignID:
+      description: Некорректный ID кампании
+      value:
+        error: Некорректный ID кампании
+    StatusNoChangeAdv:
+      value: Статус кампании не изменен
+    IncorrectSupplierIdAdv:
+      value: Некорректный ID продавца
+    InvalidRcIdAdv:
+      value: Некорректный ID РК
+    IncorrectParamAdv:
+      value: Некорректное значение параметра param
+    IncorrectTypeAdv:
+      value: Некорректное значение параметра type
+    IncorrectUsingMethods:
+      description: Некорректное использование метода
+      value: Для получения информации передайте или список кампаний, или набор фильтров
+    IncorrectName:
+      value: Некорректное название
+    IncorrectCpmAdv:
+      value: Некорректное значение параметра cpm
+    AmountNotChanged:
+      value: Размер ставки не изменен
+    CompanyNameChangeErr:
+      value: Ошибка изменения названия кампании
+    ErrorProcessRequestParam:
+      value: Ошибка обработки параметров запроса
+    RequestBodyProcessErrorAdv:
+      value: Ошибка обработки тела запроса
+    CampaignNotBelongSeller:
+      value: кампания не принадлежит продавцу
+    CampaignNotFoundAdv:
+      value:
+        error: Не найдено
+    ResponseInfoAdvert:
+      value:
+        - endTime: '2100-01-01 00:00:00+03:00'
+          createTime: '2023-05-31 16:57:42.654141+03:00'
+          changeTime: '2023-06-21 22:10:43.074183+03:00'
+          startTime: '2023-07-21 21:17:42.872376+03:00'
+          name: Носки_Шерстяные
+          params:
+            - intervals:
+                - begin: 3
+                  end: 5
+              price: 400
+              subjectId: 201
+              subjectName: Носки
+              nms:
+                - nm: 11111111
+                  active: true
+              active: false
+          dailyBudget: 0
+          advertId: 12345
+          status: 9
+          type: 6
+          paymentType: cpm
+          searchPluseState: false
+    ResponseInfoAdvertType8:
+      value:
+        - endTime: '2023-10-05T21:37:37.226021+03:00'
+          createTime: '2023-08-21T13:45:31.121172+03:00'
+          changeTime: '2023-08-21T14:59:33.622594+03:00'
+          startTime: '2023-08-21T13:45:31.147601+03:00'
+          autoParams:
+            subject:
+              name: Обложки
+              id: 342
+            sets:
+              - name: для женщин
+                id: 623
+            nms:
+              - 1234567
+            active:
+              carousel: true
+              recom: true
+              booster: true
+            nmCPM:
+              - nm: 1234567
+                cpm: 150
+          name: Кампания1
+          dailyBudget: 0
+          advertId: 11111111
+          status: 7
+          type: 8
+          paymentType: cpm
+    ResponseInfoAdvertType9:
+      value:
+        - endTime: '2100-01-01T00:00:00+03:00'
+          createTime: '2023-07-09T10:56:02.150362+03:00'
+          changeTime: '2023-07-11T02:48:44.767712+03:00'
+          startTime: '2023-07-10T08:02:31.949155+03:00'
+          searchPluseState: false
+          name: Противовирусные препараты
+          unitedParams:
+            - subject:
+                id: 3038
+                name: Противовирусные препараты
+              menus:
+                - id: -1
+                  name: ''
+              nms:
+                - 38995344
+              searchCPM: 123
+              catalogCPM: 321
+          dailyBudget: 0
+          advertId: 1234567
+          status: 11
+          type: 9
+          paymentType: cpm
+          auction_multibids:
+            - nm: 38995344
+              bid: 154
+    ResponseInfoAdvertsAll:
+      value:
+        - endTime: '2100-01-01 00:00:00+03:00'
+          createTime: '2023-05-31 16:57:42.654141+03:00'
+          changeTime: '2023-06-21 22:10:43.074183+03:00'
+          startTime: '2023-07-21 21:17:42.872376+03:00'
+          name: Носки_Шерстяные
+          params:
+            - intervals:
+                - begin: 3
+                  end: 5
+              price: 400
+              subjectId: 201
+              subjectName: Носки
+              nms:
+                - nm: 11111111
+                  active: true
+              active: false
+          dailyBudget: 0
+          advertId: 12345
+          status: 9
+          type: 6
+          paymentType: cpm
+          searchPluseState: false
+        - endTime: '2023-10-05T21:37:37.226021+03:00'
+          createTime: '2023-08-21T13:45:31.121172+03:00'
+          changeTime: '2023-08-21T14:59:33.622594+03:00'
+          startTime: '2023-08-21T13:45:31.147601+03:00'
+          autoParams:
+            subject:
+              name: Обложки
+              id: 342
+            sets:
+              - name: для женщин
+                id: 623
+            nms:
+              - 1234567
+            active:
+              carousel: true
+              recom: true
+              booster: true
+            nmCPM:
+              - nm: 1234567
+                cpm: 150
+          name: Кампания1
+          dailyBudget: 0
+          advertId: 11111111
+          status: 7
+          type: 8
+          paymentType: cpm
+        - endTime: '2100-01-01T00:00:00+03:00'
+          createTime: '2023-07-09T10:56:02.150362+03:00'
+          changeTime: '2023-07-11T02:48:44.767712+03:00'
+          startTime: '2023-07-10T08:02:31.949155+03:00'
+          searchPluseState: false
+          name: Противовирусные препараты
+          unitedParams:
+            - subject:
+                id: 3038
+                name: Противовирусные препараты
+              menus:
+                - id: -1
+                  name: ''
+              nms:
+                - 38995344
+              searchCPM: 123
+              catalogCPM: 321
+          dailyBudget: 0
+          advertId: 1234567
+          status: 11
+          type: 9
+          paymentType: cpm
+  securitySchemes:
+    HeaderApiKey:
+      type: apiKey
+      name: Authorization
+      in: header

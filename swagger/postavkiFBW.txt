@@ -1,0 +1,514 @@
+openapi: 3.0.1
+info:
+  title: Поставки FBW
+  version: ordersfbw
+  description: |
+    <div class="description_important">  
+        Узнать больше о поставках FBW можно в <a href="https://seller.wildberries.ru/instructions/subcategory/5a8e1202-0865-45b7-acae-5d0afc7add56?goBackOption=prevRoute&categoryId=479385c6-de01-4b4d-ad4e-ed941e65582e">справочном центре</a>
+    </div>
+
+    Управление информацией для формирования поставок, складскими данными и статусами
+  x-file-name: orders-fbw
+security:
+  - HeaderApiKey: []
+tags:
+  - name: Поставки
+    description: ''
+paths:
+  /api/v1/acceptance/coefficients:
+    servers:
+      - url: https://supplies-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      tags:
+        - Поставки
+      summary: Коэффициенты приёмки
+      description: |
+        Возвращает коэффициенты приёмки для конкретных складов на ближайшие 14 дней <div class="description_important">Приёмка для поставки доступна только при сочетании: <br>  `coefficient` — `0` или `1` <br>  и <br>  `allowUnload` — `true`</div>
+        <div class="description_limit">  
+          Максимум 6 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">минуту</a> на один аккаунт продавца
+        </div>
+      parameters:
+        - name: warehouseIDs
+          in: query
+          description: ID складов.<br>По умолчанию возвращаются данные по всем складам
+          schema:
+            type: string
+          example: 507,117501
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/models.AcceptanceCoefficient'
+              examples:
+                ResponseCoefficients:
+                  $ref: '#/components/examples/ResponseCoefficients'
+        '400':
+          description: Неправильный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/models.ErrorModel'
+              examples:
+                BadWarehouseIDsParamOld:
+                  $ref: '#/components/examples/Response400CoefficientsOld'
+                BadWarehouseIDsParamNew:
+                  $ref: '#/components/examples/Response400CoefficientsNew'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          description: Доступ запрещён
+        '404':
+          description: Не найдено
+        '429':
+          $ref: '#/components/responses/429'
+  /api/v1/acceptance/options:
+    servers:
+      - url: https://supplies-api.wildberries.ru
+    post:
+      security:
+        - HeaderApiKey: []
+      tags:
+        - Поставки
+      summary: Опции приёмки
+      description: |
+        Возвращает информацию о том, какие склады и типы упаковки доступны для поставки. Список складов определяется по баркоду товара и его количеству
+        <div class="description_limit">  
+          Максимум 30 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">минуту</a> на один аккаунт продавца
+        </div>
+      parameters:
+        - name: warehouseID
+          in: query
+          description: ID склада. <br> Если параметр не указан, возвращаются данные по всем складам.<br> <b>Максимум одно значение</b>
+          schema:
+            type: string
+          example: 507
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              maxItems: 5000
+              items:
+                $ref: '#/components/schemas/models.Good'
+            examples:
+              RequestOptions:
+                $ref: '#/components/examples/RequestOptions'
+        required: true
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/models.OptionsResultModel'
+              examples:
+                Response:
+                  $ref: '#/components/examples/OptionsResponse'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/models.ErrorModel'
+              examples:
+                BadWarehouseIDsParam:
+                  $ref: '#/components/examples/Response400Options'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          description: Доступ запрещён
+        '404':
+          description: Не найдено
+        '429':
+          $ref: '#/components/responses/429'
+      x-codegen-request-body-name: goods
+  /api/v1/warehouses:
+    servers:
+      - url: https://supplies-api.wildberries.ru
+    get:
+      security:
+        - HeaderApiKey: []
+      tags:
+        - Поставки
+      summary: Список складов
+      description: |
+        Возвращает список складов WB
+        <div class="description_limit">  
+          Максимум 6 запросов в <a href="/openapi/api-information#tag/Vvedenie/Limity-zaprosov">минуту</a> на один аккаунт продавца
+        </div>
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/models.WarehousesResultItems'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          description: Доступ запрещён
+        '404':
+          description: Не найдено
+        '429':
+          $ref: '#/components/responses/429'
+components:
+  securitySchemes:
+    HeaderApiKey:
+      type: apiKey
+      name: Authorization
+      in: header
+  schemas:
+    models.AcceptanceCoefficient:
+      type: object
+      properties:
+        date:
+          type: string
+          description: Дата начала действия коэффициента
+        coefficient:
+          type: number
+          description: |
+            Коэффициент приёмки:
+              - `-1` — приёмка недоступна, вне зависимости от значения поля `allowUnload`
+              - `0` — бесплатная приёмка
+              - от `1` — множитель стоимости приёмки
+        warehouseID:
+          type: integer
+          description: ID склада. По нему можно получить [информацию о складе](https://dev.wildberries.ru/openapi/orders-fbw#tag/Postavki/paths/~1api~1v1~1warehouses/get)
+        warehouseName:
+          type: string
+          description: Название склада
+        allowUnload:
+          type: boolean
+          description: |
+            Доступность приёмки для поставок данного типа, смотри значение поля `boxTypeName`:
+             - `true` — приёмка доступна
+             - `false` — приёмка не доступна 
+        boxTypeName:
+          type: string
+          description: |
+            Тип поставки:
+              - `Короба`
+              - `Монопаллеты`
+              - `Суперсейф`
+              - `QR-поставка с коробами`
+        boxTypeID:
+          type: integer
+          description: |
+            ID типа поставки:
+              - `2` — Короба
+              - `5` — Монопаллеты
+              - `6` — Суперсейф
+            <br>Для типа поставки **QR-поставка с коробами** поле не возвращается
+        storageCoef:
+          type: string
+          nullable: true
+          description: Коэффициент хранения
+        deliveryCoef:
+          type: string
+          nullable: true
+          description: Коэффициент логистики
+        deliveryBaseLiter:
+          type: string
+          nullable: true
+          description: Стоимость логистики первого литра
+        deliveryAdditionalLiter:
+          type: string
+          nullable: true
+          description: Стоимость логистики каждого следующего литра
+        storageBaseLiter:
+          type: string
+          nullable: true
+          description: |
+            Стоимость хранения:  <br>   <b>Для паллет</b> - стоимость за одну паллету   <br>  <b>Для коробов</b> - стоимость хранения за первый литр
+        storageAdditionalLiter:
+          type: string
+          nullable: true
+          description: |
+            Стоимость хранения каждого последующего литра:   <br>  <b>Для паллет</b> - всегда будет <code>null</code>, т.к. стоимость хранения за единицу паллеты определяется в <code>StorageBaseLiter</code>   <br>  <b>Для коробов</b> - стоимость хранения за каждый последующий литр
+        isSortingCenter:
+          type: boolean
+          description: |
+            Тип склада:
+             - `true` — сортировочный центр (СЦ)
+             - `false` — обычный 
+    models.WarehousesResultItems:
+      type: object
+      properties:
+        ID:
+          type: integer
+          description: ID склада
+        name:
+          type: string
+          description: Название склада
+        address:
+          type: string
+          description: Адрес склада
+        workTime:
+          type: string
+          description: Режим работы склада
+        acceptsQr:
+          type: boolean
+          description: |
+            Принимает ли склад QR-поставки:
+            - `true` — да
+            - `false` — нет
+      example:
+        ID: 210515
+        name: Вёшки
+        address: Липкинское шоссе, 2-й километр, вл1с1, посёлок Вёшки, городской округ Мытищи, Московская область
+        workTime: 24/7
+        acceptsQR: false
+    models.Good:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          description: |
+            Суммарное количество товаров, планируемых для поставки. <br>  <b>Максимум 999999</b>
+          minimum: 1
+          maximum: 999999
+        barcode:
+          type: string
+          description: Баркод из карточки товара
+    models.ErrorModel:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: HTTP статус-код
+        title:
+          type: string
+          description: ID ошибки
+        detail:
+          type: string
+          description: Описание ошибки
+        requestId:
+          type: string
+          description: ID запроса
+        origin:
+          type: string
+          description: Сервис, вернувший ошибку
+    models.OptionsResultModel:
+      type: object
+      properties:
+        result:
+          type: array
+          items:
+            type: object
+            properties:
+              barcode:
+                type: string
+                description: Баркод из карточки товара
+              error:
+                type: object
+                description: Данные ошибки. При наличии
+                properties:
+                  title:
+                    type: string
+                    description: ID ошибки
+                  detail:
+                    type: string
+                    description: Описание ошибки
+              isError:
+                type: boolean
+                description: |
+                  Наличие ошибки:
+                    - `true` — ошибка есть
+                    - Поля нет — ошибка отсутствует   
+              warehouses:
+                type: array
+                nullable: true
+                description: Список складов. При наличии ошибки будет `null`
+                items:
+                  type: object
+                  properties:
+                    warehouseID:
+                      type: integer
+                      description: ID склада. По нему можно получить [информацию о складе](./orders-fbw#tag/Postavki/paths/~1api~1v1~1warehouses/get)
+                    canBox:
+                      type: boolean
+                      description: |
+                        Тип упаковки **Короб**:
+                          - `true` — доступен
+                          - `false` — недоступен
+                    canMonopallet:
+                      type: boolean
+                      description: |
+                        Тип упаковки **Монопаллета**:
+                          - `true` — доступен
+                          - `false` — недоступен
+                    canSupersafe:
+                      type: boolean
+                      description: |
+                        Тип упаковки **Суперсейф**:
+                          - `true` — доступен
+                          - `false` — недоступен
+        requestId:
+          type: string
+          description: ID запроса при наличии ошибок
+  examples:
+    RequestOptions:
+      value:
+        - quantity: 1
+          barcode: k
+        - quantity: 7
+          barcode: '1111111111'
+    ResponseCoefficients:
+      value:
+        - date: '2024-04-11T00:00:00Z'
+          coefficient: -1
+          warehouseID: 217081
+          warehouseName: Сц Брянск 2
+          allowUnload: false
+          boxTypeName: Суперсейф
+          boxTypeID: 6
+          storageCoef: null
+          deliveryCoef: null
+          deliveryBaseLiter: null
+          deliveryAdditionalLiter: null
+          storageBaseLiter: null
+          storageAdditionalLiter: null
+          isSortingCenter: true
+    Response400CoefficientsOld:
+      value:
+        status: 400
+        title: bad request
+        detail: warehouseIDs param is incorrect
+        requestId: a6bdc2a4d2fde51c2036fa8af2483886
+        origin: supply-api
+      description: <b>Deprecated</b> <br>  Значение параметра `warehouseIDs` некорректно
+    Response400CoefficientsNew:
+      value:
+        status: 400
+        title: bad request
+        detail: Неверный формат warehouseIDs
+        requestId: a6bdc2a4d2fde51c2036fa8af2483886
+        origin: supply-api
+      description: Значение параметра `warehouseIDs` не указано, или некорректно
+    OptionsResponse:
+      value:
+        result:
+          - barcode: кrrr
+            warehouses: null
+            error:
+              title: barcode validation error
+              detail: barcode кrrr is not found
+            isError: true
+          - barcode: '123456789'
+            warehouses:
+              - warehouseID: 205349
+                canBox: true
+                canMonopallet: false
+                canSupersafe: false
+              - warehouseID: 211622
+                canBox: false
+                canMonopallet: true
+                canSupersafe: false
+              - warehouseID: 214951
+                canBox: true
+                canMonopallet: false
+                canSupersafe: false
+              - warehouseID: 206319
+                canBox: true
+                canMonopallet: false
+                canSupersafe: false
+        requestId: kr53d2bRKYmkK2N6zaNKHs
+    Response400Options:
+      value:
+        status: 400
+        title: bad request
+        detail: Неверный формат warehouseID
+        requestId: a6bdc2a4d2fde51c2036fa8af2483886
+        origin: supply-api
+      description: Значение параметра `warehouseID` не указано, или некорректно
+  responses:
+    '401':
+      description: Пользователь не авторизован
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                description: Заголовок ошибки
+              detail:
+                type: string
+                description: Детали ошибки
+              code:
+                type: string
+                description: Внутренний код ошибки
+              requestId:
+                type: string
+                description: Уникальный ID запроса
+              origin:
+                type: string
+                description: ID внутреннего сервиса WB
+              status:
+                type: number
+                description: HTTP статус-код
+              statusText:
+                type: string
+                description: Расшифровка HTTP статус-кода
+              timestamp:
+                type: string
+                format: date-time
+                description: Дата и время запроса
+          example:
+            title: unauthorized
+            detail: 'token problem; token is malformed: could not base64 decode signature: illegal base64 data at input byte 84'
+            code: 07e4668e--a53a3d31f8b0-[UK-oWaVDUqNrKG]; 03bce=277; 84bd353bf-75
+            requestId: 7b80742415072fe8b6b7f7761f1d1211
+            origin: s2s-api-auth-catalog
+            status: 401
+            statusText: Unauthorized
+            timestamp: '2024-09-30T06:52:38Z'
+    '429':
+      description: Слишком много запросов
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                description: Заголовок ошибки
+              detail:
+                type: string
+                description: Детали ошибки
+              code:
+                type: string
+                description: Внутренний код ошибки
+              requestId:
+                type: string
+                description: Уникальный ID запроса
+              origin:
+                type: string
+                description: ID внутреннего сервиса WB
+              status:
+                type: number
+                description: HTTP статус-код
+              statusText:
+                type: string
+                description: Расшифровка HTTP статус-кода
+              timestamp:
+                type: string
+                format: date-time
+                description: Дата и время запроса
+          example:
+            title: too many requests
+            detail: limited by c122a060-a7fb-4bb4-abb0-32fd4e18d489
+            code: 07e4668e-ac2242c5c8c5-[UK-4dx7JUdskGZ]
+            requestId: 9d3c02cc698f8b041c661a7c28bed293
+            origin: s2s-api-auth-catalog
+            status: 429
+            statusText: Too Many Requests
+            timestamp: '2024-09-30T06:52:38Z'

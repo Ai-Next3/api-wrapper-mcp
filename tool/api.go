@@ -78,7 +78,8 @@ func (h *APIToolHandler) executeAPICall(ctx context.Context, toolCfg *config.Too
 
 	// Set authorization header if API token is provided
 	if apiToken != "" {
-		req.Header.Set("Authorization", "Bearer "+apiToken)
+		// req.Header.Set("Authorization", "Bearer "+apiToken)
+		req.Header.Set("Authorization", apiToken)
 	}
 
 	// Execute the request

@@ -8,6 +8,7 @@ import (
 
 	"github.com/gomcpgo/api_wrapper/config"
 	"github.com/gomcpgo/api_wrapper/tool"
+	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
 
@@ -25,12 +26,19 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
+	// Создаем хуки для логирования
+	hooks := &server.Hooks{}
+	hooks.AddBeforeAny(func(ctx context.Context, id any, method mcp.MCPMethod, message any) {
+		log.Printf("[HOOK] Received request: Method=%s", method)
+	})
+
 	// 1. Создаем MCP сервер
 	s := server.NewMCPServer(
 		cfg.Server.Name,
 		cfg.Server.Version,
 		server.WithInstructions(cfg.Server.Description),
 		server.WithToolCapabilities(true),
+		server.WithHooks(hooks),
 	)
 
 	// 2. Создаем наш кастомный обработчик инструментов

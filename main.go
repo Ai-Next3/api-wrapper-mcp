@@ -5,7 +5,6 @@ import (
 	"flag"
 	"log"
 	"os"
-	"runtime/debug"
 
 	"github.com/gomcpgo/api_wrapper/config"
 	"github.com/gomcpgo/api_wrapper/tool"
@@ -13,12 +12,6 @@ import (
 )
 
 func main() {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Fatalf("!!!!!!!! PANIC DETECTED !!!!!!!!!!\n%v\n%s", r, debug.Stack())
-		}
-	}()
-
 	stdioMode := flag.Bool("stdio", false, "Run in stdio mode for local development")
 	flag.Parse()
 
@@ -37,6 +30,7 @@ func main() {
 		cfg.Server.Version,
 		server.WithInstructions(cfg.Server.Description),
 		server.WithToolCapabilities(true),
+		server.WithRecovery(),
 	)
 
 	apiToolHandler := tool.NewAPIToolHandler(cfg)

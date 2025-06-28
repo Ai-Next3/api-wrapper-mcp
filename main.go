@@ -1,77 +1,28 @@
 package main
 
 import (
-	"context"
-	"flag"
 	"log"
+	"net/http"
 	"os"
-
-	"github.com/gomcpgo/api_wrapper/config"
-	"github.com/gomcpgo/api_wrapper/tool"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
 )
 
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("!!!!!! [TEST] RECEIVED REQUEST: Method=%s, Path=%s, Headers=%v", r.Method, r.URL.Path, r.Header)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Hello, world!"))
+}
+
 func main() {
-	stdioMode := flag.Bool("stdio", false, "Run in stdio mode for local development")
-	flag.Parse()
+	http.HandleFunc("/", helloHandler)
 
-	// Конфигурационный файл должен быть первым аргументом после флагов
-	if len(flag.Args()) < 1 {
-		log.Fatal("Usage: api_wrapper [--stdio] <config.yaml>")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8081"
 	}
-	configFile := flag.Arg(0)
-	cfg, err := config.LoadConfig(configFile)
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
-	}
+	addr := ":" + port
 
-	// Создаем хуки для логирования
-	hooks := &server.Hooks{}
-	hooks.AddBeforeAny(func(ctx context.Context, id any, method mcp.MCPMethod, message any) {
-		log.Printf("[HOOK] Received request: Method=%s", method)
-	})
-
-	// 1. Создаем MCP сервер
-	s := server.NewMCPServer(
-		cfg.Server.Name,
-		cfg.Server.Version,
-		server.WithInstructions(cfg.Server.Description),
-		server.WithToolCapabilities(true),
-		server.WithHooks(hooks),
-	)
-
-	// 2. Создаем наш кастомный обработчик инструментов
-	apiToolHandler := tool.NewAPIToolHandler(cfg)
-
-	// 3. Добавляем инструменты на сервер
-	tools, err := apiToolHandler.ListTools(context.Background())
-	if err != nil {
-		log.Fatalf("Failed to list tools from handler: %v", err)
-	}
-
-	for _, t := range tools {
-		s.AddTool(t, apiToolHandler.CallTool)
-	}
-
-	if *stdioMode {
-		// Запуск в режиме Stdio
-		log.Println("Starting MCP server in stdio mode...")
-		if err := server.ServeStdio(s); err != nil {
-			log.Fatalf("Server error: %v", err)
-		}
-	} else {
-		// Запуск в режиме HTTP сервера
-		port := os.Getenv("PORT")
-		if port == "" {
-			port = "8081"
-		}
-		addr := ":" + port
-
-		log.Printf("Starting StreamableHTTP MCP server on http://localhost%s", addr)
-		httpServer := server.NewStreamableHTTPServer(s)
-		if err := httpServer.Start(addr); err != nil {
-			log.Fatalf("Server error: %v", err)
-		}
+	log.Printf("Starting DUMB TEST SERVER on http://localhost:%s", port)
+	if err := http.ListenAndServe(addr, nil); err != nil {
+		log.Fatalf("ListenAndServe error: %v", err)
 	}
 }

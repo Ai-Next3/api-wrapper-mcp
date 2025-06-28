@@ -1,16 +1,9 @@
 module github.com/gomcpgo/api_wrapper
 
-go 1.23
-
-toolchain go1.24.4
+go 1.20
 
 require (
-	github.com/mark3labs/mcp-go v0.32.0
+	github.com/gomcpgo/mcp v0.1.1
 	gopkg.in/yaml.v2 v2.4.0
-)
-
-require (
-	github.com/google/uuid v1.6.0 // indirect
-	github.com/spf13/cast v1.7.1 // indirect
-	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
+	github.com/gorilla/websocket v1.5.0
 )
